@@ -114,12 +114,14 @@ body.zahlbar-grabbing, body.zahlbar-grabbing * { cursor: grabbing !important; us
 .zahlbar .zahlbar-badline { background: none; border: 0; height: auto; padding: 0; font-family: var(--font-monospace); font-size: 12px; color: var(--text-error); text-align: left; }
 
 /* chart */
-.zahlbar-chart text { fill: var(--text-normal); font-size: 11.5px; font-family: var(--font-interface); }
-.zahlbar-chart .zahlbar-faint { fill: var(--text-faint); font-size: 10.5px; }
-.zahlbar-chart .zahlbar-muted { fill: var(--text-muted); }
+.zahlbar-chart text { fill: var(--text-normal); font-size: 13px; font-family: var(--font-interface); }
+.zahlbar-chart .zahlbar-faint { fill: var(--text-muted); font-size: 12px; }
 .zahlbar-chart .zahlbar-bold { font-weight: 600; }
-.zahlbar-chart .zahlbar-small { font-size: 11px; }
-.zahlbar-chart .zahlbar-title { font-size: 13px; }
+.zahlbar-chart .zahlbar-small { font-size: 12.5px; }
+.zahlbar-chart .zahlbar-title { font-size: 14.5px; }
+.zahlbar-chart .zahlbar-axis { stroke: var(--text-faint); stroke-width: 1; }
+.zahlbar-chart .zahlbar-grouphit { fill: transparent; }
+.zahlbar-chart .zahlbar-grouphit:hover { fill: var(--background-modifier-hover); }
 .zahlbar-chart .zahlbar-error { fill: var(--text-error); }
 .zahlbar-chart .zahlbar-grid { stroke: var(--background-modifier-border); stroke-width: 1; }
 .zahlbar-chart .zahlbar-ref { stroke: var(--text-muted); stroke-dasharray: 2 3; }
@@ -127,10 +129,13 @@ body.zahlbar-grabbing, body.zahlbar-grabbing * { cursor: grabbing !important; us
 .zahlbar-chart .zahlbar-plate { fill: var(--background-primary); opacity: 0.8; }
 .zahlbar-chart .zahlbar-seg { cursor: pointer; transition: opacity 0.12s; }
 .zahlbar-chart.is-dimming .zahlbar-seg:not(.is-hl) { opacity: 0.35; }
-/* bottom padding keeps the metrics clear of Obsidian's floating status bar */
-.zahlbar-metrics { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 36px; padding: 10px 22px 34px; }
-.zahlbar-metric b { font-size: 18px; font-weight: 600; margin-right: 6px; }
-.zahlbar-metric span { font-size: 11.5px; color: var(--text-muted); }
+/* one quiet line, label then value, like Obsidian's properties. Bottom padding keeps it clear of the status bar. */
+.zahlbar-metrics { display: flex; flex-wrap: wrap; justify-content: center; row-gap: 4px; padding: 10px 22px 34px; font-size: var(--font-ui-small); }
+.zahlbar-metric { display: flex; align-items: baseline; gap: 6px; padding: 3px 14px; border-left: 1px solid var(--background-modifier-border); border-radius: 4px; cursor: default; }
+.zahlbar-metric:first-child { border-left: 0; }
+.zahlbar-metric:hover { background: var(--background-modifier-hover); }
+.zahlbar-metric-label, .zahlbar-metric-unit { color: var(--text-muted); }
+.zahlbar-metric b { font-weight: 600; color: var(--text-normal); }
 .zahlbar-metric.is-neg b { color: var(--text-error); }
 .zahlbar-tooltip { position: absolute; pointer-events: none; display: none; z-index: 4; white-space: nowrap; background: var(--background-primary);
   border: 1px solid var(--background-modifier-border); box-shadow: var(--shadow-s); border-radius: 7px; padding: 6px 9px; font-size: 12px; }

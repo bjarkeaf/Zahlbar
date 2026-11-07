@@ -5,7 +5,15 @@ import { borderVar, fillVar } from "./colors";
 import { s } from "./dom";
 
 /** Segments thinner than this (px) are merged with their thin neighbours into "N small items". */
-const MIN_LABEL = 22;
+const MIN_LABEL = 24;
+
+const measureCtx = document.createElement("canvas").getContext("2d");
+/** Width of a label in the chart's real font, so labels fit in any theme. Falls back to an estimate. */
+function textWidth(text: string, px: number, bold: boolean, family: string): number {
+  if (!measureCtx) return text.length * px * 0.55;
+  measureCtx.font = `${bold ? 600 : 400} ${px}px ${family}`;
+  return measureCtx.measureText(text).width;
+}
 
 export type Texture = "none" | "lines" | "dots";
 export const textureOf = (form: Entry["form"]): Texture => (form === "shares" ? "lines" : form === "pension" ? "dots" : "none");
@@ -62,9 +70,10 @@ function mergeSmall(segs: Seg[], k: number): Seg[] {
 const GROUP_NAMES: Record<string, string> = { tax: "Tax", saving: "Saving", living: "Living", left: "Left over" };
 
 /** Draws both bars into `svg` at its real pixel size. Bars fill bottom-up, first entry on the baseline. */
-export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox: number): void {
+/** Draws both bars into `svg` at its real pixel size. Returns the segment ids in each group, for highlighting. */
+export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox: number): Record<string, string[]> {
   svg.replaceChildren();
-  if (W < 120 || Hbox < 120) return;
+  if (W < 120 || Hbox < 120) return {};
   const { totals: T, view, uid } = input;
   const visible = input.entries.filter((e) => !e.hidden);
   const toSeg = (e: Entry): Seg => ({ kind: "entry", ids: [entryId(e)], v: shown(e, view), name: e.name, color: input.colorOf(e), texture: textureOf(e.form), group: e.section });
@@ -90,13 +99,14 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
   s2 = s2.filter((x) => x.v > 0);
 
   const top = 22, bottom = Hbox - 40, H = bottom - top;
-  const bw = Math.max(80, Math.min(170, W / 4.6));
+  const bw = Math.max(80, Math.min(180, W / 4.2));
   const gap = Math.max(32, Math.min(140, W * 0.13));
   // lay out from the axis labels to the % labels, then centre that block in the available width
-  const content = 40 + 16 + bw + gap + bw + 8 + 110;
+  const content = 40 + 16 + bw + gap + bw + 8 + 130;
   const axL = 40 + Math.max(0, (W - content) / 2);
   const b1x = axL + 16, b2x = b1x + bw + gap, brx = b2x + bw + 8;
-  const pctX = Math.min(W, brx + 110);
+  const pctX = Math.min(W, brx + 130);
+  const pctAxis = pctX - 42;
   const T1 = s1.reduce((a, x) => a + x.v, 0), T2 = s2.reduce((a, x) => a + x.v, 0);
   const M = Math.max(T1, T2, 1);
   const step = niceStep(M, H);
@@ -124,25 +134,33 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
   // index × step rather than repeated addition, which drifts (0.1 + 0.2 = 0.30000000000000004)
   for (let i = 0, v = 0; v <= axisMax + step / 2; i++, v = i * step) {
     svg.append(s("line", { class: "zahlbar-grid", x1: axL, x2: brx + 4, y1: y(v), y2: y(v) }));
-    svg.append(s("text", { class: "zahlbar-faint", x: axL - 6, y: y(v) + 3.5, "text-anchor": "end" }, formatTick(v)));
+    svg.append(s("text", { class: "zahlbar-faint", x: axL - 6, y: y(v) + 4, "text-anchor": "end" }, formatTick(v)));
   }
   if (T.income > 0) {
-    for (let p = 0; p <= (axisMax / T.income) * 100 + 0.1; p += 25)
-      svg.append(s("text", { class: p === 100 ? "zahlbar-bold zahlbar-muted zahlbar-small" : "zahlbar-faint", x: pctX, y: y((p / 100) * T.income) + 3.5, "text-anchor": "end" }, `${p}%`));
-    svg.append(s("line", { class: "zahlbar-ref", x1: axL, x2: pctX - 32, y1: y(T.income), y2: y(T.income) }));
+    // the % scale doesn't line up with the kr grid, so it gets its own axis line and short ticks instead of gridlines
+    const pctTop = Math.floor((axisMax / T.income) * 4) * 25;
+    svg.append(s("line", { class: "zahlbar-axis", x1: pctAxis, x2: pctAxis, y1: y(0), y2: y((pctTop / 100) * T.income) }));
+    for (let p = 0; p <= pctTop; p += 25) {
+      const py = y((p / 100) * T.income);
+      svg.append(s("line", { class: "zahlbar-axis", x1: pctAxis, x2: pctAxis + 5, y1: py, y2: py }));
+      svg.append(s("text", { class: p === 100 ? "zahlbar-bold zahlbar-small" : "zahlbar-faint", x: pctX, y: py + 4, "text-anchor": "end" }, `${p}%`));
+    }
+    svg.append(s("line", { class: "zahlbar-ref", x1: axL, x2: pctAxis, y1: y(T.income), y2: y(T.income) }));
   }
 
   const per = `${input.currency ?? ""}${view === "month" ? "/mo" : "/y"}`;
   const title = (x: number, name: string, sub: string) => {
-    svg.append(s("text", { class: "zahlbar-bold zahlbar-title", x: x + bw / 2, y: bottom + 18, "text-anchor": "middle" }, name));
-    svg.append(s("text", { class: "zahlbar-faint", x: x + bw / 2, y: bottom + 33, "text-anchor": "middle" }, sub));
+    svg.append(s("text", { class: "zahlbar-bold zahlbar-title", x: x + bw / 2, y: bottom + 20, "text-anchor": "middle" }, name));
+    svg.append(s("text", { class: "zahlbar-faint", x: x + bw / 2, y: bottom + 36, "text-anchor": "middle" }, sub));
   };
   title(b1x, "Income", `${formatRounded(T.income)} ${per}`);
   // money taken out of saving isn't spending less, so the title only counts what goes out
   const goingOut = visible.filter((e) => e.section !== "income" && e.amount > 0).reduce((a, e) => a + shown(e, view), 0);
   title(b2x, "Outgoings", `${formatRounded(goingOut)} ${per}`);
 
-  const fits = (t: string) => t.length * 6.4 < bw - 10;
+  const family = getComputedStyle(svg).getPropertyValue("--font-interface").trim() || getComputedStyle(svg).fontFamily || "sans-serif";
+  const width = (t: string, px = 13, bold = false) => textWidth(t, px, bold, family);
+  const fits = (t: string, px = 13) => width(t, px) < bw - 12;
   const bar = (segs: Seg[], x: number) => {
     let acc = 0;
     for (const sg of segs) {
@@ -164,16 +182,18 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
       const pct = T.income > 0 ? Math.round((sg.v / T.income) * 100) : 0;
       const err = sg.kind === "short" ? "zahlbar-error" : "";
       const plate = sg.texture !== "none";
-      if (gh >= 50 && fits(sg.name)) {
-        if (plate) g.append(s("rect", { class: "zahlbar-plate", x: cx - 50, y: gy + gh / 2 - 24, width: 100, height: 48, rx: 4 }));
-        g.append(s("text", { x: cx, y: gy + gh / 2 - 8, "text-anchor": "middle", class: err }, sg.name));
-        g.append(s("text", { x: cx, y: gy + gh / 2 + 7, "text-anchor": "middle", class: `zahlbar-bold ${err}` }, formatRounded(sg.v)));
-        g.append(s("text", { x: cx, y: gy + gh / 2 + 20, "text-anchor": "middle", class: "zahlbar-faint" }, `${pct}%`));
-      } else if (gh >= 17) {
+      if (gh >= 56 && fits(sg.name)) {
+        const pw = Math.min(bw - 8, Math.max(width(sg.name), width(formatRounded(sg.v), 13, true), 50) + 16);
+        if (plate) g.append(s("rect", { class: "zahlbar-plate", x: cx - pw / 2, y: gy + gh / 2 - 27, width: pw, height: 54, rx: 4 }));
+        g.append(s("text", { x: cx, y: gy + gh / 2 - 9, "text-anchor": "middle", class: err }, sg.name));
+        g.append(s("text", { x: cx, y: gy + gh / 2 + 8, "text-anchor": "middle", class: `zahlbar-bold ${err}` }, formatRounded(sg.v)));
+        g.append(s("text", { x: cx, y: gy + gh / 2 + 23, "text-anchor": "middle", class: "zahlbar-faint" }, `${pct}%`));
+      } else if (gh >= 20) {
         let t = `${sg.name} ${formatRounded(sg.v)}`;
-        if (!fits(t)) t = fits(sg.name) ? sg.name : formatRounded(sg.v);
-        if (plate) g.append(s("rect", { class: "zahlbar-plate", x: cx - t.length * 3.4 - 5, y: gy + gh / 2 - 8, width: t.length * 6.8 + 10, height: 16, rx: 4 }));
-        g.append(s("text", { x: cx, y: gy + gh / 2 + 4, "text-anchor": "middle", class: `zahlbar-small ${err}` }, t));
+        if (!fits(t, 12.5)) t = fits(sg.name, 12.5) ? sg.name : formatRounded(sg.v);
+        const tw = width(t, 12.5);
+        if (plate) g.append(s("rect", { class: "zahlbar-plate", x: cx - tw / 2 - 6, y: gy + gh / 2 - 9, width: tw + 12, height: 18, rx: 4 }));
+        g.append(s("text", { x: cx, y: gy + gh / 2 + 4.5, "text-anchor": "middle", class: `zahlbar-small ${err}` }, t));
       }
       svg.append(g);
     }
@@ -185,18 +205,25 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
 
   // brackets marking the groups on the Outgoings bar
   let acc = 0;
-  const groups: Array<{ key: string; a: number; v: number }> = [];
+  const groups: Array<{ key: string; a: number; v: number; ids: string[] }> = [];
   for (const sg of s2) {
     const last = groups[groups.length - 1];
-    if (!last || last.key !== sg.group) groups.push({ key: sg.group, a: acc, v: 0 });
+    if (!last || last.key !== sg.group) groups.push({ key: sg.group, a: acc, v: 0, ids: [] });
     groups[groups.length - 1]!.v += sg.v;
+    groups[groups.length - 1]!.ids.push(...sg.ids);
     acc += sg.v;
   }
   for (const g of groups) {
     const y0 = y(g.a + g.v) + 2, y1 = y(g.a) - 2;
     if (y1 - y0 < 10) continue;
+    // the area right of the bar, around the bracket and its label, highlights the whole group on hover
+    svg.append(s("rect", { class: "zahlbar-grouphit", x: b2x + bw + 2, y: y0 - 1, width: Math.max(0, pctAxis - 6 - (b2x + bw + 2)), height: y1 - y0 + 2, "data-ids": g.ids.join(" ") }));
     svg.append(s("path", { class: "zahlbar-bracket", d: `M${brx} ${y0} h4 V${y1} h-4` }));
-    svg.append(s("text", { x: brx + 10, y: (y0 + y1) / 2 - 2, class: "zahlbar-bold zahlbar-muted zahlbar-small" }, GROUP_NAMES[g.key] ?? g.key));
-    svg.append(s("text", { x: brx + 10, y: (y0 + y1) / 2 + 11, class: "zahlbar-faint" }, `${T.income > 0 ? Math.round((g.v / T.income) * 100) : 0}%`));
+    svg.append(s("text", { x: brx + 10, y: (y0 + y1) / 2 - 2, class: "zahlbar-bold zahlbar-small" }, GROUP_NAMES[g.key] ?? g.key));
+    svg.append(s("text", { x: brx + 10, y: (y0 + y1) / 2 + 13, class: "zahlbar-faint" }, `${T.income > 0 ? Math.round((g.v / T.income) * 100) : 0}%`));
   }
+  const out: Record<string, string[]> = {};
+  for (const g of groups) out[g.key] = g.ids;
+  if (T.cashLeft < -0.5) out["short"] = ["short"];
+  return out;
 }

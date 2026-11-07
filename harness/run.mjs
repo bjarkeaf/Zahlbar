@@ -139,7 +139,24 @@ const scenarios = {
     expect((await ev(`[...document.querySelectorAll(".zahlbar-chart text")].some(t => t.textContent === "Outgoings")`)), "Outgoings title");
     expect((await ev(`document.querySelector(".zahlbar-pick").textContent`)).startsWith("Plan 2027"), "plan title in header");
     expect(await ev(`[...document.querySelectorAll(".zahlbar-chart text")].some(t => t.textContent === "64\u00a0500 DKK/mo")`), "currency on the income total");
-    expect((await ev(`document.querySelector(".zahlbar-metric span").textContent`)) === "cash left over DKK/mo", "currency on the metric");
+    expect((await ev(`document.querySelector(".zahlbar-metric").textContent`)) === "Cash left over3\u00a0050DKK/mo", `metric reads label, value, unit, got ${await ev(`document.querySelector(".zahlbar-metric").textContent`)}`);
+    const lit = () => ev(`[...document.querySelectorAll(".zahlbar-row.is-hl .zahlbar-name")].map(i => i.value).join(",")`);
+    const grouphits = await ev(`document.querySelectorAll(".zahlbar-grouphit").length`);
+    expect(grouphits >= 3, `group hover areas drawn, got ${grouphits}`);
+    await hover(".zahlbar-grouphit");
+    await sleep(60);
+    expect((await lit()) === "Income tax,Tax on vest", `hovering the tax bracket lights the tax rows, got ${await lit()}`);
+    expect((await ev(`document.querySelectorAll(".zahlbar-seg.is-hl").length`)) === 2, "and their segments");
+    await hover(".zahlbar-metric:nth-child(2)");
+    await sleep(60);
+    expect((await lit()) === "Income tax,Tax on vest", `hovering Tax rate lights tax, got ${await lit()}`);
+    await hover(".zahlbar-metric:nth-child(3)");
+    await sleep(60);
+    expect((await lit()).startsWith("Own pension,Stock purchase plan"), `hovering Saved lights saving, got ${await lit()}`);
+    expect(await ev(`!!document.querySelector('.zahlbar-seg.is-hl[data-kind="left"]')`), "and cash left over");
+    await mouse("mouseMoved", { x: 5, y: 5 }, { button: "none" });
+    await sleep(60);
+    expect((await lit()) === "", "clears on leave");
   },
   async edit() {
     await boot();

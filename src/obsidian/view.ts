@@ -48,6 +48,8 @@ export class ZahlbarView extends ItemView implements ListHost {
   /** segments to keep highlighted while a breakdown is open */
   private pinned: Set<string> | null = null;
   private frozen = false;
+  /** segment ids per group (tax, saving, living, left, short) from the last chart draw */
+  private groupIds: Record<string, string[]> = {};
   /** when the frozen breakdown was closed, so the click that closed it doesn't also open a new one */
   private unfrozenAt = 0;
   private pressClosed = false;
@@ -490,7 +492,7 @@ export class ZahlbarView extends ItemView implements ListHost {
   private drawChart(): void {
     if (!this.ui || !this.file || !this.plan.flagged) return;
     const box = this.ui.chartBox;
-    drawChart(this.ui.svg, { entries: this.plan.entries, totals: totals(this.plan.entries, this.view), view: this.view, sort: this.sort, uid: this.uid, colorOf: this.colorOf, currency: this.plan.currency },
+    this.groupIds = drawChart(this.ui.svg, { entries: this.plan.entries, totals: totals(this.plan.entries, this.view), view: this.view, sort: this.sort, uid: this.uid, colorOf: this.colorOf, currency: this.plan.currency },
       box.clientWidth, box.clientHeight);
     this.applyHover();
   }
@@ -498,13 +500,26 @@ export class ZahlbarView extends ItemView implements ListHost {
   private renderMetrics(): void {
     const t = totals(this.plan.entries, this.view);
     const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
-    const metric = (value: string, label: string, neg = false) =>
-      h("div", { class: `zahlbar-metric${neg ? " is-neg" : ""}` }, h("b", {}, value), h("span", {}, label));
+    // label, value, unit, and the groups it counts, which light up on hover
+    const metric = (label: string, value: string, unit: string, groups: string[], neg = false, title?: string) => {
+      const el = h("div", { class: `zahlbar-metric${neg ? " is-neg" : ""}`, title },
+        h("span", { class: "zahlbar-metric-label" }, label), h("b", {}, value), unit ? h("span", { class: "zahlbar-metric-unit" }, unit) : null);
+      el.addEventListener("pointerenter", () => this.pinGroups(groups));
+      el.addEventListener("pointerleave", () => this.pinGroups(null));
+      return el;
+    };
     this.ui.metrics.replaceChildren(
-      metric(formatRounded(t.cashLeft), `cash left over ${this.unit()}`, t.cashLeft < -0.5),
-      metric(pct(t.taxRate), "tax rate"),
-      metric(pct(t.savedRate), "saved, incl. shares & pension")
+      metric("Cash left over", formatRounded(t.cashLeft), this.unit(), ["left", "short"], t.cashLeft < -0.5),
+      metric("Tax rate", pct(t.taxRate), "", ["tax"]),
+      metric("Saved", pct(t.savedRate), "", ["saving", "left"], false, "Income minus tax and living, including shares and pension")
     );
+  }
+
+  /** Highlights every segment and row in the given groups, or clears it. Ignored while a breakdown is frozen. */
+  private pinGroups(groups: string[] | null): void {
+    if (this.frozen) return;
+    this.pinned = groups ? new Set(groups.flatMap((g) => this.groupIds[g] ?? [])) : null;
+    this.applyHover();
   }
 
   /** "DKK/mo", or just "/mo" when the plan has no currency */
@@ -522,7 +537,9 @@ export class ZahlbarView extends ItemView implements ListHost {
     if (!this.ui) return;
     const id = this.hoverId;
     const pinned = this.pinned;
-    this.ui.list.querySelectorAll<HTMLElement>(".zahlbar-row").forEach((r) => r.classList.toggle("is-hl", r.dataset.id === id));
+    const pinnedRows = this.pinned;
+    this.ui.list.querySelectorAll<HTMLElement>(".zahlbar-row").forEach((r) =>
+      r.classList.toggle("is-hl", pinnedRows ? pinnedRows.has(r.dataset.id ?? "") : r.dataset.id === id));
     let any = false;
     this.ui.svg.querySelectorAll(".zahlbar-seg").forEach((g) => {
       const ids = (g.getAttribute("data-ids") ?? "").split(" ");
@@ -536,6 +553,14 @@ export class ZahlbarView extends ItemView implements ListHost {
   private onChartHover(ev: PointerEvent): void {
     if (this.frozen) return;
     const { tooltip, chartBox } = this.ui;
+    const hit = (ev.target as Element).closest(".zahlbar-grouphit");
+    if (hit) {
+      tooltip.classList.remove("is-shown");
+      this.hoverId = null;
+      this.pinned = new Set((hit.getAttribute("data-ids") ?? "").split(" "));
+      this.applyHover();
+      return;
+    }
     const g = (ev.target as Element).closest(".zahlbar-seg");
     if (!g) {
       tooltip.classList.remove("is-shown");
