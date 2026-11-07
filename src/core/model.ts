@@ -20,6 +20,8 @@ export type Color = (typeof PALETTE)[number];
 
 export type View = "month" | "year";
 export type Sort = "manual" | "amount";
+/** what the chart's axis and labels show: amounts, or shares of income */
+export type Scale = "amount" | "percent";
 
 export interface Entry {
   /** 0-based line in the note, also the entry's identity until the next parse */
@@ -55,6 +57,7 @@ export interface Plan {
   currency: string | undefined;
   view: View;
   sort: Sort;
+  scale: Scale;
   entries: Entry[];
   bad: BadLine[];
   /** line of the first heading for each section present in the note */

@@ -114,7 +114,7 @@ body.zahlbar-grabbing, body.zahlbar-grabbing * { cursor: grabbing !important; us
 .zahlbar .zahlbar-badline { background: none; border: 0; height: auto; padding: 0; font-family: var(--font-monospace); font-size: 12px; color: var(--text-error); text-align: left; }
 
 /* chart */
-.zahlbar-chart text { fill: var(--text-normal); font-size: 13px; font-family: var(--font-interface); }
+.zahlbar-chart text { fill: var(--text-normal); font-size: 13px; font-family: var(--font-interface); pointer-events: none; }
 .zahlbar-chart .zahlbar-faint { fill: var(--text-muted); font-size: 12px; }
 .zahlbar-chart .zahlbar-bold { font-weight: 600; }
 .zahlbar-chart .zahlbar-small { font-size: 12.5px; }
@@ -125,12 +125,12 @@ body.zahlbar-grabbing, body.zahlbar-grabbing * { cursor: grabbing !important; us
 .zahlbar-chart .zahlbar-error { fill: var(--text-error); }
 .zahlbar-chart .zahlbar-grid { stroke: var(--background-modifier-border); stroke-width: 1; }
 .zahlbar-chart .zahlbar-ref { stroke: var(--text-muted); stroke-dasharray: 2 3; }
-.zahlbar-chart .zahlbar-bracket { stroke: var(--text-faint); fill: none; }
+.zahlbar-chart .zahlbar-bracket { stroke: var(--text-faint); fill: none; pointer-events: none; }
 .zahlbar-chart .zahlbar-plate { fill: var(--background-primary); opacity: 0.8; }
 .zahlbar-chart .zahlbar-seg { cursor: pointer; transition: opacity 0.12s; }
 .zahlbar-chart.is-dimming .zahlbar-seg:not(.is-hl) { opacity: 0.35; }
 /* one quiet line, label then value, like Obsidian's properties. Bottom padding keeps it clear of the status bar. */
-.zahlbar-metrics { display: flex; flex-wrap: wrap; justify-content: center; row-gap: 4px; padding: 10px 22px 34px; font-size: var(--font-ui-small); }
+.zahlbar-metrics { display: flex; flex-wrap: wrap; justify-content: center; row-gap: 4px; padding: 10px 22px 34px; font-size: calc(var(--font-ui-small) * 1.5); }
 .zahlbar-metric { display: flex; align-items: baseline; gap: 6px; padding: 3px 14px; border-left: 1px solid var(--background-modifier-border); border-radius: 4px; cursor: default; }
 .zahlbar-metric:first-child { border-left: 0; }
 .zahlbar-metric:hover { background: var(--background-modifier-hover); }

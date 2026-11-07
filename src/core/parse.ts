@@ -1,5 +1,5 @@
 import { MONTHLY, parseAmount, parseFreq } from "./format";
-import type { BadLine, Color, Entry, Form, Plan, Section, Sort, View } from "./model";
+import type { BadLine, Color, Entry, Form, Plan, Scale, Section, Sort, View } from "./model";
 import { PALETTE, SECTIONS } from "./model";
 
 const HEADING = /^(#{1,6})\s+(.+?)\s*#*\s*$/;
@@ -63,6 +63,7 @@ export function parse(text: string): Plan {
   const fm = readFrontmatter(lines);
   const view: View = fm.keys.get("view") === "year" ? "year" : "month";
   const sort: Sort = fm.keys.get("sort") === "amount" ? "amount" : "manual";
+  const scale: Scale = fm.keys.get("scale") === "percent" ? "percent" : "amount";
   const plan: Plan = {
     lines,
     eol,
@@ -71,6 +72,7 @@ export function parse(text: string): Plan {
     currency: fm.keys.get("currency") || undefined,
     view,
     sort,
+    scale,
     entries: [],
     bad: [],
     headings: {}

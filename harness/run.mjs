@@ -377,7 +377,7 @@ const scenarios = {
   },
   async sortAndView() {
     await boot();
-    await click(`.zahlbar-head .zahlbar-segctl:last-of-type button[data-v="amount"]`);
+    await click(`.zahlbar-head .zahlbar-segctl:nth-of-type(2) button[data-v="amount"]`);
     await sleep(150);
     expect((await text()).includes("sort: amount\n"), "sort saved in frontmatter");
     const living = await names("living");
@@ -388,6 +388,19 @@ const scenarios = {
     await sleep(150);
     expect((await text()).includes("view: year\n"), "view saved");
     expect((await metric()) === "36 600", `year metric 36 600, got ${await metric()}`);
+  },
+  async scale() {
+    await boot();
+    expect((await ev(`[...document.querySelectorAll(".zahlbar-head .zahlbar-segctl:last-of-type button")].map(b => b.textContent).join(",")`)) === "DKK,%", "toggle labelled with the currency");
+    await click(`.zahlbar-head .zahlbar-segctl:last-of-type button[data-v="percent"]`);
+    await sleep(150);
+    expect((await text()).includes("scale: percent\n"), "scale saved in frontmatter");
+    const ticks = await ev(`[...document.querySelectorAll(".zahlbar-chart text.zahlbar-faint")].filter(t => +t.getAttribute("x") < 200).map(t => t.textContent)`);
+    expect(ticks.length > 3 && ticks.every((t) => /^\d+%$/.test(t)), `axis in percent, got ${JSON.stringify(ticks)}`);
+    expect(await ev(`[...document.querySelectorAll(".zahlbar-chart text")].some(t => t.textContent === "78%")`), "salary shown as 78% of income");
+    await click(`.zahlbar-head .zahlbar-segctl:last-of-type button[data-v="amount"]`);
+    await sleep(150);
+    expect((await text()).includes("scale: amount\n"), "back to amounts");
   },
   async external() {
     await boot();

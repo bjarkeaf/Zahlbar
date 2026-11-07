@@ -12,10 +12,11 @@ zahlbar: 1
 currency: DKK      # optional, shown with totals (e.g. "64 500 DKK/mo")
 view: month        # optional: month | year
 sort: manual       # optional: manual | amount
+scale: amount      # optional: amount | percent
 ---
 ```
 
-`view` and `sort` are display preferences. The plugin writes them when you use its toggles.
+`view`, `sort` and `scale` are display preferences. The plugin writes them when you use its toggles.
 
 ## Sections
 

@@ -1,4 +1,4 @@
-import type { Entry, Sort, Totals, View } from "../core";
+import type { Entry, Scale, Sort, Totals, View } from "../core";
 import { formatRounded, formatTick, ordered, shown } from "../core";
 import type { ColorOf } from "./colors";
 import { borderVar, fillVar } from "./colors";
@@ -34,6 +34,7 @@ export interface ChartInput {
   totals: Totals;
   view: View;
   sort: Sort;
+  scale: Scale;
   /** from the note's frontmatter, shown with totals only */
   currency: string | undefined;
   /** unique per view, so pattern ids don't clash between two open panes */
@@ -101,16 +102,21 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
   const top = 22, bottom = Hbox - 40, H = bottom - top;
   const bw = Math.max(80, Math.min(180, W / 4.2));
   const gap = Math.max(32, Math.min(140, W * 0.13));
-  // lay out from the axis labels to the % labels, then centre that block in the available width
-  const content = 40 + 16 + bw + gap + bw + 8 + 130;
+  // lay out from the axis labels to the group labels, then centre that block in the available width
+  const content = 40 + 16 + bw + gap + bw + 8 + 100;
   const axL = 40 + Math.max(0, (W - content) / 2);
   const b1x = axL + 16, b2x = b1x + bw + gap, brx = b2x + bw + 8;
-  const pctX = Math.min(W, brx + 130);
-  const pctAxis = pctX - 42;
+  const refEnd = Math.min(W - 40, brx + 70);
   const T1 = s1.reduce((a, x) => a + x.v, 0), T2 = s2.reduce((a, x) => a + x.v, 0);
   const M = Math.max(T1, T2, 1);
-  const step = niceStep(M, H);
-  const axisMax = Math.ceil(M / step) * step;
+  // in percent mode the steps are tidy percentages of income, otherwise tidy amounts
+  const pctMode = input.scale === "percent" && T.income > 0;
+  const toPct = (v: number) => (v / T.income) * 100;
+  const stepP = pctMode ? niceStep(toPct(M), H) : 0;
+  const step = pctMode ? (stepP / 100) * T.income : niceStep(M, H);
+  // a hair of rounding (bars summing to 100.0000001%) mustn't add a whole empty step on top
+  const up = (x: number) => Math.ceil(x - 1e-6);
+  const axisMax = pctMode ? ((up(toPct(M) / stepP) * stepP) / 100) * T.income : up(M / step) * step;
   const k = H / axisMax;
   const y = (v: number) => bottom - v * k;
   s1 = mergeSmall(s1, k);
@@ -134,18 +140,12 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
   // index × step rather than repeated addition, which drifts (0.1 + 0.2 = 0.30000000000000004)
   for (let i = 0, v = 0; v <= axisMax + step / 2; i++, v = i * step) {
     svg.append(s("line", { class: "zahlbar-grid", x1: axL, x2: brx + 4, y1: y(v), y2: y(v) }));
-    svg.append(s("text", { class: "zahlbar-faint", x: axL - 6, y: y(v) + 4, "text-anchor": "end" }, formatTick(v)));
+    svg.append(s("text", { class: "zahlbar-faint", x: axL - 6, y: y(v) + 4, "text-anchor": "end" }, pctMode ? `${Math.round(i * stepP)}%` : formatTick(v)));
   }
   if (T.income > 0) {
-    // the % scale doesn't line up with the kr grid, so it gets its own axis line and short ticks instead of gridlines
-    const pctTop = Math.floor((axisMax / T.income) * 4) * 25;
-    svg.append(s("line", { class: "zahlbar-axis", x1: pctAxis, x2: pctAxis, y1: y(0), y2: y((pctTop / 100) * T.income) }));
-    for (let p = 0; p <= pctTop; p += 25) {
-      const py = y((p / 100) * T.income);
-      svg.append(s("line", { class: "zahlbar-axis", x1: pctAxis, x2: pctAxis + 5, y1: py, y2: py }));
-      svg.append(s("text", { class: p === 100 ? "zahlbar-bold zahlbar-small" : "zahlbar-faint", x: pctX, y: py + 4, "text-anchor": "end" }, `${p}%`));
-    }
-    svg.append(s("line", { class: "zahlbar-ref", x1: axL, x2: pctAxis, y1: y(T.income), y2: y(T.income) }));
+    // where income ends: everything above this line on Outgoings is more than comes in
+    svg.append(s("line", { class: "zahlbar-ref", x1: axL, x2: refEnd, y1: y(T.income), y2: y(T.income) }));
+    svg.append(s("text", { class: "zahlbar-bold zahlbar-small", x: refEnd + 4, y: y(T.income) + 4 }, "100%"));
   }
 
   const per = `${input.currency ?? ""}${view === "month" ? "/mo" : "/y"}`;
@@ -153,10 +153,11 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
     svg.append(s("text", { class: "zahlbar-bold zahlbar-title", x: x + bw / 2, y: bottom + 20, "text-anchor": "middle" }, name));
     svg.append(s("text", { class: "zahlbar-faint", x: x + bw / 2, y: bottom + 36, "text-anchor": "middle" }, sub));
   };
-  title(b1x, "Income", `${formatRounded(T.income)} ${per}`);
+  const share = (v: number) => `${T.income > 0 ? Math.round(toPct(v)) : 0}%`;
+  title(b1x, "Income", pctMode ? "100%" : `${formatRounded(T.income)} ${per}`);
   // money taken out of saving isn't spending less, so the title only counts what goes out
   const goingOut = visible.filter((e) => e.section !== "income" && e.amount > 0).reduce((a, e) => a + shown(e, view), 0);
-  title(b2x, "Outgoings", `${formatRounded(goingOut)} ${per}`);
+  title(b2x, "Outgoings", pctMode ? share(goingOut) : `${formatRounded(goingOut)} ${per}`);
 
   const family = getComputedStyle(svg).getPropertyValue("--font-interface").trim() || getComputedStyle(svg).fontFamily || "sans-serif";
   const width = (t: string, px = 13, bold = false) => textWidth(t, px, bold, family);
@@ -182,15 +183,18 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
       const pct = T.income > 0 ? Math.round((sg.v / T.income) * 100) : 0;
       const err = sg.kind === "short" ? "zahlbar-error" : "";
       const plate = sg.texture !== "none";
+      // the main figure follows the scale: the amount, or its share of income. The other one goes underneath.
+      const main = pctMode ? `${pct}%` : formatRounded(sg.v);
+      const second = pctMode ? formatRounded(sg.v) : `${pct}%`;
       if (gh >= 56 && fits(sg.name)) {
-        const pw = Math.min(bw - 8, Math.max(width(sg.name), width(formatRounded(sg.v), 13, true), 50) + 16);
+        const pw = Math.min(bw - 8, Math.max(width(sg.name), width(main, 13, true), 50) + 16);
         if (plate) g.append(s("rect", { class: "zahlbar-plate", x: cx - pw / 2, y: gy + gh / 2 - 27, width: pw, height: 54, rx: 4 }));
         g.append(s("text", { x: cx, y: gy + gh / 2 - 9, "text-anchor": "middle", class: err }, sg.name));
-        g.append(s("text", { x: cx, y: gy + gh / 2 + 8, "text-anchor": "middle", class: `zahlbar-bold ${err}` }, formatRounded(sg.v)));
-        g.append(s("text", { x: cx, y: gy + gh / 2 + 23, "text-anchor": "middle", class: "zahlbar-faint" }, `${pct}%`));
+        g.append(s("text", { x: cx, y: gy + gh / 2 + 8, "text-anchor": "middle", class: `zahlbar-bold ${err}` }, main));
+        g.append(s("text", { x: cx, y: gy + gh / 2 + 23, "text-anchor": "middle", class: "zahlbar-faint" }, second));
       } else if (gh >= 20) {
-        let t = `${sg.name} ${formatRounded(sg.v)}`;
-        if (!fits(t, 12.5)) t = fits(sg.name, 12.5) ? sg.name : formatRounded(sg.v);
+        let t = `${sg.name} ${main}`;
+        if (!fits(t, 12.5)) t = fits(sg.name, 12.5) ? sg.name : main;
         const tw = width(t, 12.5);
         if (plate) g.append(s("rect", { class: "zahlbar-plate", x: cx - tw / 2 - 6, y: gy + gh / 2 - 9, width: tw + 12, height: 18, rx: 4 }));
         g.append(s("text", { x: cx, y: gy + gh / 2 + 4.5, "text-anchor": "middle", class: `zahlbar-small ${err}` }, t));
@@ -217,7 +221,7 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
     const y0 = y(g.a + g.v) + 2, y1 = y(g.a) - 2;
     if (y1 - y0 < 10) continue;
     // the area right of the bar, around the bracket and its label, highlights the whole group on hover
-    svg.append(s("rect", { class: "zahlbar-grouphit", x: b2x + bw + 2, y: y0 - 1, width: Math.max(0, pctAxis - 6 - (b2x + bw + 2)), height: y1 - y0 + 2, "data-ids": g.ids.join(" ") }));
+    svg.append(s("rect", { class: "zahlbar-grouphit", x: b2x + bw + 2, y: y0 - 1, width: Math.max(0, refEnd - (b2x + bw + 2)), height: y1 - y0 + 2, "data-ids": g.ids.join(" ") }));
     svg.append(s("path", { class: "zahlbar-bracket", d: `M${brx} ${y0} h4 V${y1} h-4` }));
     svg.append(s("text", { x: brx + 10, y: (y0 + y1) / 2 - 2, class: "zahlbar-bold zahlbar-small" }, GROUP_NAMES[g.key] ?? g.key));
     svg.append(s("text", { x: brx + 10, y: (y0 + y1) / 2 + 13, class: "zahlbar-faint" }, `${T.income > 0 ? Math.round((g.v / T.income) * 100) : 0}%`));

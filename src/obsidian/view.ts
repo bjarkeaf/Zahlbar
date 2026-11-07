@@ -1,6 +1,6 @@
 import { ItemView, Menu, Notice, TFile } from "obsidian";
 import type { ViewStateResult, WorkspaceLeaf } from "obsidian";
-import type { Entry, EntryPatch, EntryRef, Plan, Section, Sort, View } from "../core";
+import type { Entry, EntryPatch, EntryRef, Plan, Scale, Section, Sort, View } from "../core";
 import {
   addEntry, formatAmount, formatRounded, freqLabel, moveEntry, parse, removeEntry, setMeta, shown, StaleError, totals, updateEntry
 } from "../core";
@@ -45,6 +45,7 @@ export class ZahlbarView extends ItemView implements ListHost {
   plan: Plan = parse("");
   view: View = "month";
   sort: Sort = "manual";
+  scale: Scale = "amount";
   hoverId: string | null = null;
   focusNext: Focus | null = null;
   /** segments to keep highlighted while a breakdown is open */
@@ -66,6 +67,7 @@ export class ZahlbarView extends ItemView implements ListHost {
     pick: HTMLButtonElement;
     viewCtl: HTMLElement;
     sortCtl: HTMLElement;
+    scaleCtl: HTMLElement;
     tip: HTMLElement;
     body: HTMLElement;
     empty: HTMLElement;
@@ -144,6 +146,7 @@ export class ZahlbarView extends ItemView implements ListHost {
     this.colorOf = colorMap(this.plan.entries);
     this.view = this.plan.view;
     this.sort = this.plan.sort;
+    this.scale = this.plan.scale;
     this.render();
   }
 
@@ -241,9 +244,10 @@ export class ZahlbarView extends ItemView implements ListHost {
     void this.app.workspace.getLeaf("tab").openFile(this.file, { eState: { line } });
   }
 
-  private setMetaKey(key: "view" | "sort", value: string): void {
+  private setMetaKey(key: "view" | "sort" | "scale", value: string): void {
     if (key === "view") this.view = value as View;
-    else this.sort = value as Sort;
+    else if (key === "sort") this.sort = value as Sort;
+    else this.scale = value as Scale;
     this.renderPlan();
     void this.write((t) => setMeta(t, key, value));
   }
@@ -262,7 +266,10 @@ export class ZahlbarView extends ItemView implements ListHost {
     const info = h("button", { class: "zahlbar-info", "aria-label": "How amounts are shown" }, tip);
     const sortCtl = this.segmented([["manual", "As written"], ["amount", "Largest first"]], (v) => this.setMetaKey("sort", v));
     sortCtl.setAttribute("title", "Display order. The note keeps its own order.");
-    root.append(h("div", { class: "zahlbar-head" }, pick, viewCtl, info, sortCtl));
+    // amounts or shares of income on the chart. The first button is labelled with the plan's currency.
+    const scaleCtl = this.segmented([["amount", "Amount"], ["percent", "%"]], (v) => this.setMetaKey("scale", v));
+    scaleCtl.setAttribute("title", "Show the chart in amounts or as % of income");
+    root.append(h("div", { class: "zahlbar-head" }, pick, viewCtl, info, sortCtl, scaleCtl));
 
     const list = h("div", { class: "zahlbar-list" });
     const chartBox = h("div", { class: "zahlbar-chartbox" });
@@ -282,7 +289,7 @@ export class ZahlbarView extends ItemView implements ListHost {
     });
     const empty = h("div", { class: "zahlbar-empty" });
     root.append(body, empty);
-    this.ui = { pick, viewCtl, sortCtl, tip, body, empty, list, chartBox, svg, metrics, tooltip };
+    this.ui = { pick, viewCtl, sortCtl, scaleCtl, tip, body, empty, list, chartBox, svg, metrics, tooltip };
 
     this.resize = new ResizeObserver(() => this.drawChart());
     this.resize.observe(chartBox);
@@ -466,7 +473,11 @@ export class ZahlbarView extends ItemView implements ListHost {
   }
 
   private renderPlan(): void {
-    const { viewCtl, sortCtl, tip, list } = this.ui;
+    const { viewCtl, sortCtl, scaleCtl, tip, list } = this.ui;
+    for (const b of Array.from(scaleCtl.children)) {
+      b.classList.toggle("is-on", b.getAttribute("data-v") === this.scale);
+      if (b.getAttribute("data-v") === "amount") b.textContent = this.plan.currency ?? "Amount";
+    }
     for (const b of Array.from(viewCtl.children)) b.classList.toggle("is-on", b.getAttribute("data-v") === this.view);
     for (const b of Array.from(sortCtl.children)) b.classList.toggle("is-on", b.getAttribute("data-v") === this.sort);
     tip.textContent = this.view === "month"
@@ -499,7 +510,7 @@ export class ZahlbarView extends ItemView implements ListHost {
   private drawChart(): void {
     if (!this.ui || !this.file || !this.plan.flagged) return;
     const box = this.ui.chartBox;
-    this.groupIds = drawChart(this.ui.svg, { entries: this.plan.entries, totals: totals(this.plan.entries, this.view), view: this.view, sort: this.sort, uid: this.uid, colorOf: this.colorOf, currency: this.plan.currency },
+    this.groupIds = drawChart(this.ui.svg, { entries: this.plan.entries, totals: totals(this.plan.entries, this.view), view: this.view, sort: this.sort, scale: this.scale, uid: this.uid, colorOf: this.colorOf, currency: this.plan.currency },
       box.clientWidth, box.clientHeight);
     this.applyHover();
   }
