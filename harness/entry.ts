@@ -1,4 +1,4 @@
-// Boots the real EarmarkView on an in-memory vault. run.mjs drives it with real input over CDP.
+// Boots the real ZahlbarView on an in-memory vault. run.mjs drives it with real input over CDP.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { parse } from "../src/core";
 import { TFile } from "./obsidian-stub";
@@ -39,7 +39,7 @@ const vault = {
 
 (window as any).__app = {
   vault,
-  metadataCache: { getFileCache: (f: TFile) => ({ frontmatter: parse(files.get(f.path) ?? "").flagged ? { earmark: 1 } : undefined }) },
+  metadataCache: { getFileCache: (f: TFile) => ({ frontmatter: parse(files.get(f.path) ?? "").flagged ? { zahlbar: 1 } : undefined }) },
   workspace: { getLeaf: () => ({ openFile: async (f: TFile, o?: { eState?: { line?: number } }) => opened.push({ path: f.path, ...(o?.eState?.line !== undefined ? { line: o.eState.line } : {}) }) }) }
 };
 
@@ -54,10 +54,10 @@ const vault = {
   },
   async boot(fixtures: Record<string, string>, open: string) {
     for (const [p, t] of Object.entries(fixtures)) files.set(p, t);
-    const { EarmarkView } = await import("../src/obsidian/view");
+    const { ZahlbarView } = await import("../src/obsidian/view");
     const host = {
       planFiles: () => [...files.keys()].filter((p) => parse(files.get(p)!).flagged).map(fileFor),
-      createPlan: async () => vault.create("Plan.md", "---\nearmark: 1\n---\n# Plan\n"),
+      createPlan: async () => vault.create("Plan.md", "---\nzahlbar: 1\n---\n# Plan\n"),
       rememberFile: () => {},
       listWidth: undefined as number | undefined,
       saveListWidth(px: number | undefined) {
@@ -65,7 +65,7 @@ const vault = {
         (window as any).__em.savedWidth = px ?? null;
       }
     };
-    const view = new EarmarkView({} as any, host as any);
+    const view = new ZahlbarView({} as any, host as any);
     document.getElementById("pane")!.append(view.contentEl);
     await view.onOpen();
     await view.openFile(fileFor(open) as any);

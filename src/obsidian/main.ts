@@ -1,32 +1,32 @@
 import { normalizePath, Plugin, TFile } from "obsidian";
 import { newPlanText } from "../core";
 import type { ViewHost } from "./view";
-import { EarmarkView, ICON, VIEW_TYPE } from "./view";
+import { ZahlbarView, ICON, VIEW_TYPE } from "./view";
 
 interface Prefs {
   lastFile?: string;
   listWidth?: number;
 }
 
-export default class EarmarkPlugin extends Plugin implements ViewHost {
+export default class ZahlbarPlugin extends Plugin implements ViewHost {
   private prefs: Prefs = {};
 
   override async onload(): Promise<void> {
     this.prefs = ((await this.loadData()) as Prefs | null) ?? {};
-    this.registerView(VIEW_TYPE, (leaf) => new EarmarkView(leaf, this));
-    this.addRibbonIcon(ICON, "Open Earmark", () => void this.open());
+    this.registerView(VIEW_TYPE, (leaf) => new ZahlbarView(leaf, this));
+    this.addRibbonIcon(ICON, "Open Zahlbar", () => void this.open());
     this.addCommand({ id: "open", name: "Open plan", callback: () => void this.open() });
     this.addCommand({ id: "new-plan", name: "New plan", callback: async () => this.openFile(await this.createPlan("")) });
     this.registerEvent(
       this.app.workspace.on("file-menu", (menu, file) => {
         if (file instanceof TFile && this.isPlan(file))
-          menu.addItem((i) => i.setTitle("Open in Earmark").setIcon(ICON).onClick(() => void this.openFile(file)));
+          menu.addItem((i) => i.setTitle("Open in Zahlbar").setIcon(ICON).onClick(() => void this.openFile(file)));
       })
     );
   }
 
   isPlan(file: TFile): boolean {
-    return file.extension === "md" && this.app.metadataCache.getFileCache(file)?.frontmatter?.["earmark"] !== undefined;
+    return file.extension === "md" && this.app.metadataCache.getFileCache(file)?.frontmatter?.["zahlbar"] !== undefined;
   }
 
   planFiles(): TFile[] {
@@ -63,7 +63,7 @@ export default class EarmarkPlugin extends Plugin implements ViewHost {
 
   async openFile(file: TFile): Promise<void> {
     const ws = this.app.workspace;
-    const existing = ws.getLeavesOfType(VIEW_TYPE).find((l) => l.view instanceof EarmarkView && l.view.file?.path === file.path);
+    const existing = ws.getLeavesOfType(VIEW_TYPE).find((l) => l.view instanceof ZahlbarView && l.view.file?.path === file.path);
     const leaf = existing ?? ws.getLeaf("tab");
     if (!existing) await leaf.setViewState({ type: VIEW_TYPE, active: true, state: { file: file.path } });
     await ws.revealLeaf(leaf);

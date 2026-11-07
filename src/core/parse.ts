@@ -66,7 +66,7 @@ export function parse(text: string): Plan {
   const plan: Plan = {
     lines,
     eol,
-    flagged: fm.keys.has("earmark"),
+    flagged: fm.keys.has("zahlbar"),
     title: undefined,
     currency: fm.keys.get("currency") || undefined,
     view,

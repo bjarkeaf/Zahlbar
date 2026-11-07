@@ -49,7 +49,7 @@ export interface BadLine {
 export interface Plan {
   lines: string[];
   eol: string;
-  /** true when the frontmatter has an `earmark:` key */
+  /** true when the frontmatter has an `zahlbar:` key */
   flagged: boolean;
   title: string | undefined;
   currency: string | undefined;

@@ -117,7 +117,7 @@ export function setMeta(text: string, key: string, value: string): string {
 export function newPlanText(title: string, currency = "DKK"): string {
   return [
     "---",
-    "earmark: 1",
+    "zahlbar: 1",
     `currency: ${currency}`,
     "---",
     `# ${title}`,

@@ -11,7 +11,7 @@ import { h } from "./dom";
 import type { Focus, ListHost } from "./list";
 import { closePopover, mountPopover, renderList } from "./list";
 
-export const VIEW_TYPE = "earmark-view";
+export const VIEW_TYPE = "zahlbar-view";
 export const ICON = "piggy-bank";
 
 /** What the view needs from the plugin. */
@@ -26,7 +26,7 @@ export interface ViewHost {
 
 const ref = (e: Entry): EntryRef => ({ line: e.line, raw: e.raw });
 
-/** Segments Earmark computes rather than reads from a line. */
+/** Segments Zahlbar computes rather than reads from a line. */
 type Computed = "shares" | "pension" | "fromShares" | "fromPension" | "left" | "short";
 const COMPUTED = ["shares", "pension", "fromShares", "fromPension", "left", "short"];
 const isComputed = (k: string | null | undefined): k is Computed => !!k && COMPUTED.includes(k);
@@ -38,7 +38,7 @@ interface BreakdownLine {
   group?: Entry[];
 }
 
-export class EarmarkView extends ItemView implements ListHost {
+export class ZahlbarView extends ItemView implements ListHost {
   file: TFile | null = null;
   plan: Plan = parse("");
   view: View = "month";
@@ -80,7 +80,7 @@ export class EarmarkView extends ItemView implements ListHost {
     return VIEW_TYPE;
   }
   getDisplayText(): string {
-    return this.file ? this.file.basename : "Earmark";
+    return this.file ? this.file.basename : "Zahlbar";
   }
   override getIcon(): string {
     return ICON;
@@ -171,7 +171,7 @@ export class EarmarkView extends ItemView implements ListHost {
         await this.app.vault.process(file, (data) => (result.text = op(data)));
       } catch (err) {
         if (!(err instanceof StaleError)) throw err;
-        new Notice("Earmark: the note changed, so it was reloaded. Try again.");
+        new Notice("Zahlbar: the note changed, so it was reloaded. Try again.");
         this.focusNext = null;
         this.loadText(await this.app.vault.read(file));
         return;
@@ -197,14 +197,14 @@ export class EarmarkView extends ItemView implements ListHost {
       return (snap.after = removeEntry(t, ref(e)));
     });
     const frag = document.createDocumentFragment();
-    const undo = h("button", { class: "earmark-undo" }, "Undo");
+    const undo = h("button", { class: "zahlbar-undo" }, "Undo");
     frag.append(h("span", {}, `Removed ${e.name} `), undo);
     const notice = new Notice(frag, 6000);
     undo.addEventListener("click", () => {
       notice.hide();
       void this.write((t) => {
         if (t === snap.after) return snap.before;
-        new Notice("Earmark: the note changed since, so it can't be undone here.");
+        new Notice("Zahlbar: the note changed since, so it can't be undone here.");
         return t;
       });
     });
@@ -249,34 +249,34 @@ export class EarmarkView extends ItemView implements ListHost {
   private build(): void {
     const root = this.contentEl;
     root.replaceChildren();
-    root.classList.add("earmark");
+    root.classList.add("zahlbar");
 
-    const pick = h("button", { class: "earmark-pick", "aria-label": "Choose plan" });
+    const pick = h("button", { class: "zahlbar-pick", "aria-label": "Choose plan" });
     pick.addEventListener("click", (ev) => this.showPicker(ev));
     const viewCtl = this.segmented([["month", "Month"], ["year", "Year"]], (v) => this.setMetaKey("view", v));
-    const tip = h("span", { class: "earmark-tipbox" });
-    const info = h("button", { class: "earmark-info", "aria-label": "How amounts are shown" }, tip);
+    const tip = h("span", { class: "zahlbar-tipbox" });
+    const info = h("button", { class: "zahlbar-info", "aria-label": "How amounts are shown" }, tip);
     const sortCtl = this.segmented([["manual", "As written"], ["amount", "Largest first"]], (v) => this.setMetaKey("sort", v));
     sortCtl.setAttribute("title", "Display order. The note keeps its own order.");
-    root.append(h("div", { class: "earmark-head" }, pick, viewCtl, info, sortCtl));
+    root.append(h("div", { class: "zahlbar-head" }, pick, viewCtl, info, sortCtl));
 
-    const list = h("div", { class: "earmark-list" });
-    const chartBox = h("div", { class: "earmark-chartbox" });
+    const list = h("div", { class: "zahlbar-list" });
+    const chartBox = h("div", { class: "zahlbar-chartbox" });
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.classList.add("earmark-chart");
+    svg.classList.add("zahlbar-chart");
     chartBox.append(svg);
-    const metrics = h("div", { class: "earmark-metrics" });
-    const tooltip = h("div", { class: "earmark-tooltip" });
-    const chartCol = h("div", { class: "earmark-chartcol" }, chartBox, metrics, tooltip);
-    const divider = h("div", { class: "earmark-divider", role: "separator", "aria-orientation": "vertical", title: "Drag to resize. Double-click to reset." });
-    const body = h("div", { class: "earmark-body" }, list, divider, chartCol);
+    const metrics = h("div", { class: "zahlbar-metrics" });
+    const tooltip = h("div", { class: "zahlbar-tooltip" });
+    const chartCol = h("div", { class: "zahlbar-chartcol" }, chartBox, metrics, tooltip);
+    const divider = h("div", { class: "zahlbar-divider", role: "separator", "aria-orientation": "vertical", title: "Drag to resize. Double-click to reset." });
+    const body = h("div", { class: "zahlbar-body" }, list, divider, chartCol);
     this.setListWidth(this.host.listWidth);
     this.registerDomEvent(divider, "pointerdown", (ev) => this.startResize(ev, divider));
     this.registerDomEvent(divider, "dblclick", () => {
       this.setListWidth(undefined);
       this.host.saveListWidth(undefined);
     });
-    const empty = h("div", { class: "earmark-empty" });
+    const empty = h("div", { class: "zahlbar-empty" });
     root.append(body, empty);
     this.ui = { pick, viewCtl, sortCtl, tip, body, empty, list, chartBox, svg, metrics, tooltip };
 
@@ -301,7 +301,7 @@ export class EarmarkView extends ItemView implements ListHost {
     // the document-level handler that closes popovers runs first, so here we can tell if this press closed one
     this.registerDomEvent(chartBox, "pointerdown", () => (this.pressClosed = Date.now() - this.unfrozenAt < 50));
     this.registerDomEvent(chartBox, "click", (ev) => {
-      const g = (ev.target as Element).closest(".earmark-seg");
+      const g = (ev.target as Element).closest(".zahlbar-seg");
       const kind = g?.getAttribute("data-kind");
       // a click whose press closed a frozen breakdown only closes it
       if (this.pressClosed) return;
@@ -311,7 +311,7 @@ export class EarmarkView extends ItemView implements ListHost {
   }
 
   private focusAmount(id: string | undefined): void {
-    const input = id ? this.ui.list.querySelector<HTMLInputElement>(`.earmark-row[data-id="${id}"] .earmark-amount`) : null;
+    const input = id ? this.ui.list.querySelector<HTMLInputElement>(`.zahlbar-row[data-id="${id}"] .zahlbar-amount`) : null;
     if (!input) return;
     input.scrollIntoView({ block: "nearest" });
     input.focus();
@@ -345,8 +345,8 @@ export class EarmarkView extends ItemView implements ListHost {
     const { title, total, lines } = this.breakdown(kind);
     const per = this.view === "month" ? "/mo" : "/y";
     const row = (sign: string, label: string, value: string, cls = "") =>
-      h("div", { class: `earmark-bd-row ${cls}` }, h("span", { class: "earmark-bd-sign" }, sign), h("span", { class: "earmark-bd-label" }, label), h("span", { class: "earmark-bd-value" }, value));
-    const el = h("div", { class: "earmark-breakdown" }, h("div", { class: "earmark-bd-title" }, title));
+      h("div", { class: `zahlbar-bd-row ${cls}` }, h("span", { class: "zahlbar-bd-sign" }, sign), h("span", { class: "zahlbar-bd-label" }, label), h("span", { class: "zahlbar-bd-value" }, value));
+    const el = h("div", { class: "zahlbar-breakdown" }, h("div", { class: "zahlbar-bd-title" }, title));
     for (const l of lines) {
       const r = row(l.sign, l.label, formatRounded(l.value), l.e && interactive ? "is-link" : "");
       const e = l.e;
@@ -357,7 +357,7 @@ export class EarmarkView extends ItemView implements ListHost {
         });
       el.append(r);
     }
-    el.append(row("=", title, `${formatRounded(total)} ${per}`, `earmark-bd-total${total < -0.5 ? " is-neg" : ""}`));
+    el.append(row("=", title, `${formatRounded(total)} ${per}`, `zahlbar-bd-total${total < -0.5 ? " is-neg" : ""}`));
     return { el, ids: new Set([kind, ...lines.flatMap((l) => (l.e ? [l.e] : l.group ?? [])).map(entryId)]) };
   }
 
@@ -367,7 +367,7 @@ export class EarmarkView extends ItemView implements ListHost {
     const at = tooltip.classList.contains("is-shown") ? tooltip.getBoundingClientRect() : null;
     tooltip.classList.remove("is-shown");
     const { el, ids } = this.breakdownEl(kind, true);
-    el.classList.add("earmark-pop");
+    el.classList.add("zahlbar-pop");
     this.frozen = true;
     this.pinned = ids;
     this.applyHover();
@@ -381,9 +381,9 @@ export class EarmarkView extends ItemView implements ListHost {
   }
 
   private setListWidth(px: number | undefined): void {
-    if (px === undefined) this.contentEl.style.removeProperty("--earmark-list-w");
-    else this.contentEl.style.setProperty("--earmark-list-w", `${Math.round(px)}px`);
-    this.ui?.list.querySelectorAll<HTMLInputElement>(".earmark-name").forEach((i) => i.dispatchEvent(new Event("input")));
+    if (px === undefined) this.contentEl.style.removeProperty("--zahlbar-list-w");
+    else this.contentEl.style.setProperty("--zahlbar-list-w", `${Math.round(px)}px`);
+    this.ui?.list.querySelectorAll<HTMLInputElement>(".zahlbar-name").forEach((i) => i.dispatchEvent(new Event("input")));
   }
 
   /** Drags the divider between list and chart. The list can't go below its default width, and the chart keeps 360px. */
@@ -396,7 +396,7 @@ export class EarmarkView extends ItemView implements ListHost {
     const max = () => Math.max(min, this.ui.body.getBoundingClientRect().width - 360 - divider.offsetWidth);
     let width = from;
     divider.classList.add("is-active");
-    document.body.classList.add("earmark-resizing");
+    document.body.classList.add("zahlbar-resizing");
     const move = (m: PointerEvent) => {
       width = Math.max(min, Math.min(max(), from + m.clientX - start));
       this.setListWidth(width);
@@ -406,7 +406,7 @@ export class EarmarkView extends ItemView implements ListHost {
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
       divider.classList.remove("is-active");
-      document.body.classList.remove("earmark-resizing");
+      document.body.classList.remove("zahlbar-resizing");
       if (width !== from) this.host.saveListWidth(width <= min ? undefined : Math.round(width));
     };
     window.addEventListener("pointermove", move);
@@ -415,7 +415,7 @@ export class EarmarkView extends ItemView implements ListHost {
   }
 
   private segmented(options: Array<[string, string]>, onPick: (v: string) => void): HTMLElement {
-    const el = h("div", { class: "earmark-segctl" });
+    const el = h("div", { class: "zahlbar-segctl" });
     for (const [value, label] of options) {
       const b = h("button", { "data-v": value }, label);
       b.addEventListener("click", () => onPick(value));
@@ -448,7 +448,7 @@ export class EarmarkView extends ItemView implements ListHost {
     if (!this.ui) return;
     const { pick, body, empty } = this.ui;
     pick.textContent = this.file ? this.plan.title ?? this.file.basename : "No plan";
-    pick.append(h("span", { class: "earmark-caret" }, "▾"));
+    pick.append(h("span", { class: "zahlbar-caret" }, "▾"));
     const ready = !!this.file && this.plan.flagged;
     body.toggleAttribute("hidden", !ready);
     empty.toggleAttribute("hidden", ready);
@@ -473,8 +473,8 @@ export class EarmarkView extends ItemView implements ListHost {
     empty.replaceChildren();
     if (this.file && !this.plan.flagged) {
       const make = h("button", { class: "mod-cta" }, "Make it a plan");
-      make.addEventListener("click", () => void this.write((t) => setMeta(t, "earmark", "1")));
-      empty.append(h("p", {}, `${this.file.basename} isn't a plan yet. A plan has `, h("code", {}, "earmark: 1"), " in its frontmatter."), make);
+      make.addEventListener("click", () => void this.write((t) => setMeta(t, "zahlbar", "1")));
+      empty.append(h("p", {}, `${this.file.basename} isn't a plan yet. A plan has `, h("code", {}, "zahlbar: 1"), " in its frontmatter."), make);
       return;
     }
     const create = h("button", { class: "mod-cta" }, "New plan");
@@ -499,7 +499,7 @@ export class EarmarkView extends ItemView implements ListHost {
     const t = totals(this.plan.entries, this.view);
     const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
     const metric = (value: string, label: string, neg = false) =>
-      h("div", { class: `earmark-metric${neg ? " is-neg" : ""}` }, h("b", {}, value), h("span", {}, label));
+      h("div", { class: `zahlbar-metric${neg ? " is-neg" : ""}` }, h("b", {}, value), h("span", {}, label));
     this.ui.metrics.replaceChildren(
       metric(formatRounded(t.cashLeft), `cash left over ${this.view === "month" ? "/mo" : "/y"}`, t.cashLeft < -0.5),
       metric(pct(t.taxRate), "tax rate"),
@@ -517,9 +517,9 @@ export class EarmarkView extends ItemView implements ListHost {
     if (!this.ui) return;
     const id = this.hoverId;
     const pinned = this.pinned;
-    this.ui.list.querySelectorAll<HTMLElement>(".earmark-row").forEach((r) => r.classList.toggle("is-hl", r.dataset.id === id));
+    this.ui.list.querySelectorAll<HTMLElement>(".zahlbar-row").forEach((r) => r.classList.toggle("is-hl", r.dataset.id === id));
     let any = false;
-    this.ui.svg.querySelectorAll(".earmark-seg").forEach((g) => {
+    this.ui.svg.querySelectorAll(".zahlbar-seg").forEach((g) => {
       const ids = (g.getAttribute("data-ids") ?? "").split(" ");
       const on = pinned ? ids.some((x) => pinned.has(x)) : !!id && ids.includes(id);
       any ||= on;
@@ -531,7 +531,7 @@ export class EarmarkView extends ItemView implements ListHost {
   private onChartHover(ev: PointerEvent): void {
     if (this.frozen) return;
     const { tooltip, chartBox } = this.ui;
-    const g = (ev.target as Element).closest(".earmark-seg");
+    const g = (ev.target as Element).closest(".zahlbar-seg");
     if (!g) {
       tooltip.classList.remove("is-shown");
       this.pinned = null;
@@ -551,10 +551,10 @@ export class EarmarkView extends ItemView implements ListHost {
       this.pinned = null;
       const t = totals(this.plan.entries, this.view);
       const per = this.view === "month" ? "/mo" : "/y";
-      const line = (text: string, cls = "earmark-tt-sub") => h("div", { class: cls }, text);
+      const line = (text: string, cls = "zahlbar-tt-sub") => h("div", { class: cls }, text);
       const es = ids.map((id) => this.plan.entries.find((e) => entryId(e) === id)).filter((e): e is Entry => !!e);
       if (es.length > 1) {
-        parts.push(line(`${es.length} small items`, "earmark-tt-title"));
+        parts.push(line(`${es.length} small items`, "zahlbar-tt-title"));
         for (const e of es) parts.push(line(`${e.name} ${formatRounded(shown(e, this.view))}`));
       } else if (es[0]) {
         const e = es[0];
@@ -562,7 +562,7 @@ export class EarmarkView extends ItemView implements ListHost {
         const share = t.income > 0 ? Math.round((Math.abs(shown(e, this.view)) / t.income) * 100) : 0;
         const dir = e.amount < 0 ? "from" : "into";
         const form = e.form === "cash" ? "" : e.section === "income" ? ` · ${e.form}` : e.section === "tax" ? " · paid in shares" : ` · ${dir} ${e.form}`;
-        parts.push(line(e.name, "earmark-tt-title"), line(`${formatAmount(e.amount, "\u00a0")} ${freqLabel(e.freq)}${conv}`), line(`${share}% of income${form}`));
+        parts.push(line(e.name, "zahlbar-tt-title"), line(`${formatAmount(e.amount, "\u00a0")} ${freqLabel(e.freq)}${conv}`), line(`${share}% of income${form}`));
       }
     }
     this.applyHover();

@@ -37,5 +37,5 @@ export function colorMap(entries: Entry[]): ColorOf {
   return (e) => map.get(e.line) ?? hash(e.name);
 }
 
-export const fillVar = (i: number): string => `var(--earmark-c${i})`;
-export const borderVar = (i: number): string => `var(--earmark-c${i}b)`;
+export const fillVar = (i: number): string => `var(--zahlbar-c${i})`;
+export const borderVar = (i: number): string => `var(--zahlbar-c${i}b)`;

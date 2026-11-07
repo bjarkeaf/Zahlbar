@@ -114,24 +114,24 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
       bg ? s("rect", { width: 6, height: 6, style: `fill:${bg}` }) : null,
       s("circle", { cx: 3, cy: 3, r: 1.1, style: `fill:${dot}` }));
   for (let i = 0; i < 10; i++) defs.append(hatch(`${uid}-h${i}`, fillVar(i), borderVar(i)), dots(`${uid}-d${i}`, fillVar(i), borderVar(i)));
-  defs.append(hatch(`${uid}-hn`, null, "var(--earmark-neutral-b)", 1), hatch(`${uid}-he`, null, "var(--text-error)", 0.55));
-  defs.append(dots(`${uid}-hp`, null, "var(--earmark-neutral-b)"));
+  defs.append(hatch(`${uid}-hn`, null, "var(--zahlbar-neutral-b)", 1), hatch(`${uid}-he`, null, "var(--text-error)", 0.55));
+  defs.append(dots(`${uid}-hp`, null, "var(--zahlbar-neutral-b)"));
   svg.append(defs);
 
   for (let v = 0; v <= axisMax + 0.1; v += step) {
-    svg.append(s("line", { class: "earmark-grid", x1: axL, x2: brx + 4, y1: y(v), y2: y(v) }));
-    svg.append(s("text", { class: "earmark-faint", x: axL - 6, y: y(v) + 3.5, "text-anchor": "end" }, formatTick(v)));
+    svg.append(s("line", { class: "zahlbar-grid", x1: axL, x2: brx + 4, y1: y(v), y2: y(v) }));
+    svg.append(s("text", { class: "zahlbar-faint", x: axL - 6, y: y(v) + 3.5, "text-anchor": "end" }, formatTick(v)));
   }
   if (T.income > 0) {
     for (let p = 0; p <= (axisMax / T.income) * 100 + 0.1; p += 25)
-      svg.append(s("text", { class: p === 100 ? "earmark-bold earmark-muted earmark-small" : "earmark-faint", x: pctX, y: y((p / 100) * T.income) + 3.5, "text-anchor": "end" }, `${p}%`));
-    svg.append(s("line", { class: "earmark-ref", x1: axL, x2: pctX - 32, y1: y(T.income), y2: y(T.income) }));
+      svg.append(s("text", { class: p === 100 ? "zahlbar-bold zahlbar-muted zahlbar-small" : "zahlbar-faint", x: pctX, y: y((p / 100) * T.income) + 3.5, "text-anchor": "end" }, `${p}%`));
+    svg.append(s("line", { class: "zahlbar-ref", x1: axL, x2: pctX - 32, y1: y(T.income), y2: y(T.income) }));
   }
 
   const per = view === "month" ? "/mo" : "/y";
   const title = (x: number, name: string, sub: string) => {
-    svg.append(s("text", { class: "earmark-bold earmark-title", x: x + bw / 2, y: bottom + 18, "text-anchor": "middle" }, name));
-    svg.append(s("text", { class: "earmark-faint", x: x + bw / 2, y: bottom + 33, "text-anchor": "middle" }, sub));
+    svg.append(s("text", { class: "zahlbar-bold zahlbar-title", x: x + bw / 2, y: bottom + 18, "text-anchor": "middle" }, name));
+    svg.append(s("text", { class: "zahlbar-faint", x: x + bw / 2, y: bottom + 33, "text-anchor": "middle" }, sub));
   };
   title(b1x, "Income", `${formatRounded(T.income)} ${per}`);
   // money taken out of saving isn't spending less, so the title only counts what goes out
@@ -145,31 +145,31 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
       const yt = y(acc + sg.v), h = sg.v * k, gy = yt + 1, gh = Math.max(h - 2, 0.8), r = Math.min(6, gh / 2);
       acc += sg.v;
       let fill: string, stroke: string, dash: string | undefined;
-      if (sg.kind === "shares" || sg.kind === "fromShares") [fill, stroke] = [`url(#${uid}-hn)`, "var(--earmark-neutral-b)"];
-      else if (sg.kind === "pension" || sg.kind === "fromPension") [fill, stroke] = [`url(#${uid}-hp)`, "var(--earmark-neutral-b)"];
-      else if (sg.kind === "left") [fill, stroke, dash] = ["transparent", "var(--earmark-neutral-b)", "4 3"];
+      if (sg.kind === "shares" || sg.kind === "fromShares") [fill, stroke] = [`url(#${uid}-hn)`, "var(--zahlbar-neutral-b)"];
+      else if (sg.kind === "pension" || sg.kind === "fromPension") [fill, stroke] = [`url(#${uid}-hp)`, "var(--zahlbar-neutral-b)"];
+      else if (sg.kind === "left") [fill, stroke, dash] = ["transparent", "var(--zahlbar-neutral-b)", "4 3"];
       else if (sg.kind === "short") [fill, stroke, dash] = [`url(#${uid}-he)`, "var(--text-error)", "4 3"];
-      else if (sg.kind === "small") [fill, stroke] = ["var(--earmark-neutral)", "var(--earmark-neutral-b)"];
+      else if (sg.kind === "small") [fill, stroke] = ["var(--zahlbar-neutral)", "var(--zahlbar-neutral-b)"];
       else {
         const pattern = sg.texture === "lines" ? `url(#${uid}-h${sg.color})` : sg.texture === "dots" ? `url(#${uid}-d${sg.color})` : fillVar(sg.color);
         [fill, stroke] = [pattern, borderVar(sg.color)];
       }
-      const g = s("g", { class: "earmark-seg", "data-ids": sg.ids.join(" "), "data-kind": sg.kind });
+      const g = s("g", { class: "zahlbar-seg", "data-ids": sg.ids.join(" "), "data-kind": sg.kind });
       g.append(s("rect", { x, y: gy, width: bw, height: gh, rx: r, style: `fill:${fill};stroke:${stroke}`, "stroke-dasharray": dash }));
       const cx = x + bw / 2;
       const pct = T.income > 0 ? Math.round((sg.v / T.income) * 100) : 0;
-      const err = sg.kind === "short" ? "earmark-error" : "";
+      const err = sg.kind === "short" ? "zahlbar-error" : "";
       const plate = sg.texture !== "none";
       if (gh >= 50 && fits(sg.name)) {
-        if (plate) g.append(s("rect", { class: "earmark-plate", x: cx - 50, y: gy + gh / 2 - 24, width: 100, height: 48, rx: 4 }));
+        if (plate) g.append(s("rect", { class: "zahlbar-plate", x: cx - 50, y: gy + gh / 2 - 24, width: 100, height: 48, rx: 4 }));
         g.append(s("text", { x: cx, y: gy + gh / 2 - 8, "text-anchor": "middle", class: err }, sg.name));
-        g.append(s("text", { x: cx, y: gy + gh / 2 + 7, "text-anchor": "middle", class: `earmark-bold ${err}` }, formatRounded(sg.v)));
-        g.append(s("text", { x: cx, y: gy + gh / 2 + 20, "text-anchor": "middle", class: "earmark-faint" }, `${pct}%`));
+        g.append(s("text", { x: cx, y: gy + gh / 2 + 7, "text-anchor": "middle", class: `zahlbar-bold ${err}` }, formatRounded(sg.v)));
+        g.append(s("text", { x: cx, y: gy + gh / 2 + 20, "text-anchor": "middle", class: "zahlbar-faint" }, `${pct}%`));
       } else if (gh >= 17) {
         let t = `${sg.name} ${formatRounded(sg.v)}`;
         if (!fits(t)) t = fits(sg.name) ? sg.name : formatRounded(sg.v);
-        if (plate) g.append(s("rect", { class: "earmark-plate", x: cx - t.length * 3.4 - 5, y: gy + gh / 2 - 8, width: t.length * 6.8 + 10, height: 16, rx: 4 }));
-        g.append(s("text", { x: cx, y: gy + gh / 2 + 4, "text-anchor": "middle", class: `earmark-small ${err}` }, t));
+        if (plate) g.append(s("rect", { class: "zahlbar-plate", x: cx - t.length * 3.4 - 5, y: gy + gh / 2 - 8, width: t.length * 6.8 + 10, height: 16, rx: 4 }));
+        g.append(s("text", { x: cx, y: gy + gh / 2 + 4, "text-anchor": "middle", class: `zahlbar-small ${err}` }, t));
       }
       svg.append(g);
     }
@@ -177,7 +177,7 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
   bar(s1, b1x);
   bar(s2, b2x);
   if (T.cashLeft < -0.5)
-    svg.append(s("text", { x: b1x + bw / 2, y: y(T1) - 6, "text-anchor": "middle", class: "earmark-bold earmark-error earmark-small" }, `${formatRounded(-T.cashLeft)} short`));
+    svg.append(s("text", { x: b1x + bw / 2, y: y(T1) - 6, "text-anchor": "middle", class: "zahlbar-bold zahlbar-error zahlbar-small" }, `${formatRounded(-T.cashLeft)} short`));
 
   // brackets marking the groups on the Outgoings bar
   let acc = 0;
@@ -191,8 +191,8 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
   for (const g of groups) {
     const y0 = y(g.a + g.v) + 2, y1 = y(g.a) - 2;
     if (y1 - y0 < 10) continue;
-    svg.append(s("path", { class: "earmark-bracket", d: `M${brx} ${y0} h4 V${y1} h-4` }));
-    svg.append(s("text", { x: brx + 10, y: (y0 + y1) / 2 - 2, class: "earmark-bold earmark-muted earmark-small" }, GROUP_NAMES[g.key] ?? g.key));
-    svg.append(s("text", { x: brx + 10, y: (y0 + y1) / 2 + 11, class: "earmark-faint" }, `${T.income > 0 ? Math.round((g.v / T.income) * 100) : 0}%`));
+    svg.append(s("path", { class: "zahlbar-bracket", d: `M${brx} ${y0} h4 V${y1} h-4` }));
+    svg.append(s("text", { x: brx + 10, y: (y0 + y1) / 2 - 2, class: "zahlbar-bold zahlbar-muted zahlbar-small" }, GROUP_NAMES[g.key] ?? g.key));
+    svg.append(s("text", { x: brx + 10, y: (y0 + y1) / 2 + 11, class: "zahlbar-faint" }, `${T.income > 0 ? Math.round((g.v / T.income) * 100) : 0}%`));
   }
 }

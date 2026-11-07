@@ -11,7 +11,7 @@ const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/
 const only = args.only ? args.only.split(",") : null;
 const CHROME = process.env.CHROME ?? "chromium";
 const PORT = 9400 + Math.floor(Math.random() * 500);
-const profile = mkdtempSync(path.join(tmpdir(), "earmark-chrome-"));
+const profile = mkdtempSync(path.join(tmpdir(), "zahlbar-chrome-"));
 const chrome = spawn(CHROME, ["--headless=new", "--disable-gpu", `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`,
   "--window-size=1300,820", "--no-first-run", "--allow-file-access-from-files", "about:blank"], { stdio: "ignore" });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -102,10 +102,10 @@ async function fill(sel, text) {
   await sleep(120);
 }
 const text = () => ev(`__em.text(${JSON.stringify(PLAN)})`);
-const row = (name) => `.earmark-row:has(.earmark-name[value=${JSON.stringify(name)}])`;
+const row = (name) => `.zahlbar-row:has(.zahlbar-name[value=${JSON.stringify(name)}])`;
 const choose = (sel, value) => ev(`(() => { const s = document.querySelector(${JSON.stringify(sel)}); s.value = ${JSON.stringify(value)}; s.dispatchEvent(new Event("change", {bubbles: true})); })()`);
-const metric = () => ev(`document.querySelector(".earmark-metric b").textContent`);
-const names = (sec) => ev(`[...document.querySelectorAll('.earmark-row[data-sec="${sec}"] .earmark-name')].map(i => i.value)`);
+const metric = () => ev(`document.querySelector(".zahlbar-metric b").textContent`);
+const names = (sec) => ev(`[...document.querySelectorAll('.zahlbar-row[data-sec="${sec}"] .zahlbar-name')].map(i => i.value)`);
 const fileNames = async (sec) => {
   const lines = (await text()).split("\n");
   const start = lines.indexOf(`## ${sec}`);
@@ -133,142 +133,142 @@ let current = "";
 const scenarios = {
   async render() {
     await boot();
-    expect((await ev(`document.querySelectorAll(".earmark-row").length`)) === 18, "18 rows");
+    expect((await ev(`document.querySelectorAll(".zahlbar-row").length`)) === 18, "18 rows");
     expect((await metric()) === "3 050", `cash left 3 050, got ${await metric()}`);
-    expect((await ev(`document.querySelectorAll(".earmark-seg").length`)) > 8, "chart has segments");
-    expect((await ev(`[...document.querySelectorAll(".earmark-chart text")].some(t => t.textContent === "Outgoings")`)), "Outgoings title");
-    expect((await ev(`document.querySelector(".earmark-pick").textContent`)).startsWith("Plan 2027"), "plan title in header");
+    expect((await ev(`document.querySelectorAll(".zahlbar-seg").length`)) > 8, "chart has segments");
+    expect((await ev(`[...document.querySelectorAll(".zahlbar-chart text")].some(t => t.textContent === "Outgoings")`)), "Outgoings title");
+    expect((await ev(`document.querySelector(".zahlbar-pick").textContent`)).startsWith("Plan 2027"), "plan title in header");
   },
   async edit() {
     await boot();
     const before = await text();
-    await fill(`${row("Rent")} .earmark-amount`, "10000");
+    await fill(`${row("Rent")} .zahlbar-amount`, "10000");
     const after = await text();
     expect(after.includes("- Rent: 10 000\n"), "amount written");
     expect(before.split("\n").filter((l, i) => l !== after.split("\n")[i]).length === 1, "exactly one line changed");
-    expect((await ev(`document.activeElement?.closest(".earmark-row")?.querySelector(".earmark-name")?.value`)) === "Car", "Enter moves to next row");
-    await fill(`${row("Food")} .earmark-amount`, "120k yearly");
+    expect((await ev(`document.activeElement?.closest(".zahlbar-row")?.querySelector(".zahlbar-name")?.value`)) === "Car", "Enter moves to next row");
+    await fill(`${row("Food")} .zahlbar-amount`, "120k yearly");
     expect((await text()).includes("- Food: 120 000 yearly\n"), "amount with frequency");
-    await fill(`${row("Food")} .earmark-name`, "Groceries");
+    await fill(`${row("Food")} .zahlbar-name`, "Groceries");
     expect((await text()).includes("- Groceries: 120 000 yearly\n"), "rename");
-    await click(`${row("Leisure")} .earmark-amount`);
+    await click(`${row("Leisure")} .zahlbar-amount`);
     await ev(`document.activeElement.select()`);
     await type("999");
     await key("Escape");
     await sleep(100);
     expect((await text()).includes("- Leisure: 4 500\n"), "Escape cancels");
-    await fill(`${row("Leisure")} .earmark-amount`, "lots");
+    await fill(`${row("Leisure")} .zahlbar-amount`, "lots");
     expect((await text()).includes("- Leisure: 4 500\n"), "invalid amount not written");
   },
   async hide() {
     await boot();
-    await dblclick(`${row("Food")} .earmark-sw`);
+    await dblclick(`${row("Food")} .zahlbar-sw`);
     await sleep(400);
     expect((await text()).includes("- ~~Food: 4 000~~\n"), "double-click hides");
-    expect(!(await ev(`!!document.querySelector(".earmark-pop")`)), "no popover after double-click");
-    await dblclick(`${row("Food")} .earmark-sw`);
+    expect(!(await ev(`!!document.querySelector(".zahlbar-pop")`)), "no popover after double-click");
+    await dblclick(`${row("Food")} .zahlbar-sw`);
     await sleep(400);
     expect((await text()).includes("- Food: 4 000\n"), "double-click shows again");
   },
   async popover() {
     await boot();
-    await click(`${row("Rent")} .earmark-sw`);
-    expect(!(await ev(`!!document.querySelector(".earmark-pop")`)), "popover waits for a possible double-click");
+    await click(`${row("Rent")} .zahlbar-sw`);
+    expect(!(await ev(`!!document.querySelector(".zahlbar-pop")`)), "popover waits for a possible double-click");
     await sleep(350);
-    expect(await ev(`!!document.querySelector(".earmark-pop")`), "popover opens");
-    await click(`.earmark-pop .earmark-pal button[title="rose"]`);
+    expect(await ev(`!!document.querySelector(".zahlbar-pop")`), "popover opens");
+    await click(`.zahlbar-pop .zahlbar-pal button[title="rose"]`);
     await sleep(150);
     expect((await text()).includes("- Rent: 9 500 {rose}\n"), "colour written");
-    await click(`${row("Tax on vest")} .earmark-sw`);
+    await click(`${row("Tax on vest")} .zahlbar-sw`);
     await sleep(350);
-    await click(`.earmark-pop-forms button:first-child`);
+    await click(`.zahlbar-pop-forms button:first-child`);
     await sleep(200);
     expect((await text()).includes("- Tax on vest: 12 000 quarterly\n"), "sell-to-cover switched off");
     expect((await metric()) === "−950", `cash left now −950, got ${await metric()}`);
-    expect(await ev(`document.querySelector(".earmark-pop-forms .is-on")?.textContent === "Cash"`), "popover reopened with new state");
+    expect(await ev(`document.querySelector(".zahlbar-pop-forms .is-on")?.textContent === "Cash"`), "popover reopened with new state");
     await key("Escape");
     await sleep(50);
-    expect(!(await ev(`!!document.querySelector(".earmark-pop")`)), "Escape closes popover");
-    await click(`${row("Stock purchase plan")} .earmark-sw`);
+    expect(!(await ev(`!!document.querySelector(".zahlbar-pop")`)), "Escape closes popover");
+    await click(`${row("Stock purchase plan")} .zahlbar-sw`);
     await sleep(350);
-    expect((await ev(`document.querySelector(".earmark-pop-label")?.textContent`)) === "Goes into", "saving asks where the money goes");
-    await click(`.earmark-pop-forms button:nth-child(2)`);
+    expect((await ev(`document.querySelector(".zahlbar-pop-label")?.textContent`)) === "Goes into", "saving asks where the money goes");
+    await click(`.zahlbar-pop-forms button:nth-child(2)`);
     await sleep(200);
     expect((await text()).includes("- Stock purchase plan: 5 000 {shares}\n"), "saving into shares written");
     expect((await metric()) === "−950", "cash unchanged by saving into shares");
-    expect(await ev(`document.querySelector('${row("Stock purchase plan")} .earmark-sw').classList.contains("is-lines")`), "swatch shows lines");
+    expect(await ev(`document.querySelector('${row("Stock purchase plan")} .zahlbar-sw').classList.contains("is-lines")`), "swatch shows lines");
     await key("Escape");
-    await click(`${row("Salary")} .earmark-sw`);
+    await click(`${row("Salary")} .zahlbar-sw`);
     await sleep(350);
-    await click(`.earmark-pop .earmark-pop-item`);
+    await click(`.zahlbar-pop .zahlbar-pop-item`);
     await sleep(150);
     expect((await text()).includes("- ~~Salary: 50 000~~\n"), "hide from popover");
   },
   async frequency() {
     await boot();
-    await choose(`${row("Rent")} .earmark-freq`, "2");
+    await choose(`${row("Rent")} .zahlbar-freq`, "2");
     await sleep(150);
     expect((await text()).includes("- Rent: 9 500 quarterly\n"), "preset");
-    await choose(`${row("Food")} .earmark-freq`, "custom");
+    await choose(`${row("Food")} .zahlbar-freq`, "custom");
     await sleep(50);
-    expect(await ev(`document.activeElement?.classList.contains("earmark-freqn")`), "custom editor focused");
+    expect(await ev(`document.activeElement?.classList.contains("zahlbar-freqn")`), "custom editor focused");
     await ev(`document.activeElement.select()`);
     await type("6");
-    await choose(`${row("Food")} .earmark-frequ`, "week");
-    await click(`${row("Food")} .earmark-freqn`);
+    await choose(`${row("Food")} .zahlbar-frequ`, "week");
+    await click(`${row("Food")} .zahlbar-freqn`);
     await key("Enter");
     await sleep(150);
     expect((await text()).includes("- Food: 4 000 every 6 weeks\n"), "custom frequency");
-    expect((await ev(`document.querySelector('${row("Food")} .earmark-freq').selectedOptions[0].textContent`)) === "every 6 weeks", "dropdown shows custom label");
+    expect((await ev(`document.querySelector('${row("Food")} .zahlbar-freq').selectedOptions[0].textContent`)) === "every 6 weeks", "dropdown shows custom label");
   },
   async breakdown() {
     await boot();
-    const rowsIn = (sel) => ev(`[...document.querySelectorAll("${sel} .earmark-bd-row")].map(r => r.textContent)`);
-    await hover(`.earmark-seg[data-kind="shares"]`);
+    const rowsIn = (sel) => ev(`[...document.querySelectorAll("${sel} .zahlbar-bd-row")].map(r => r.textContent)`);
+    await hover(`.zahlbar-seg[data-kind="shares"]`);
     await sleep(80);
-    const hovered = await rowsIn(".earmark-tooltip");
+    const hovered = await rowsIn(".zahlbar-tooltip");
     expect(JSON.stringify(hovered) === JSON.stringify(["+Stock vest10\u00a0000", "−Tax on vest4\u00a0000", "=Kept as shares6\u00a0000 /mo"]), `hover shows breakdown, got ${JSON.stringify(hovered)}`);
-    expect(await ev(`(() => { const id = __view.plan.entries.find((e) => e.name === "Stock vest").line; return document.querySelector('.earmark-seg[data-ids="' + id + '"]')?.classList.contains("is-hl"); })()`), "source lit up on hover");
-    const box = (sel) => ev(`(() => { const b = document.querySelector("${sel}"); const r = b.getBoundingClientRect(); const rows = [...b.querySelectorAll(".earmark-bd-row")].map(x => Math.round(x.getBoundingClientRect().top - r.top)); return { x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height), rows }; })()`);
-    const before = await box(".earmark-tooltip .earmark-breakdown");
-    await click(`.earmark-seg[data-kind="shares"]`);
+    expect(await ev(`(() => { const id = __view.plan.entries.find((e) => e.name === "Stock vest").line; return document.querySelector('.zahlbar-seg[data-ids="' + id + '"]')?.classList.contains("is-hl"); })()`), "source lit up on hover");
+    const box = (sel) => ev(`(() => { const b = document.querySelector("${sel}"); const r = b.getBoundingClientRect(); const rows = [...b.querySelectorAll(".zahlbar-bd-row")].map(x => Math.round(x.getBoundingClientRect().top - r.top)); return { x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height), rows }; })()`);
+    const before = await box(".zahlbar-tooltip .zahlbar-breakdown");
+    await click(`.zahlbar-seg[data-kind="shares"]`);
     await sleep(80);
-    expect(await ev(`!!document.querySelector(".earmark-pop.earmark-breakdown")`), "click freezes it");
-    const after = await box(".earmark-pop.earmark-breakdown");
+    expect(await ev(`!!document.querySelector(".zahlbar-pop.zahlbar-breakdown")`), "click freezes it");
+    const after = await box(".zahlbar-pop.zahlbar-breakdown");
     expect(JSON.stringify(before) === JSON.stringify(after), `frozen looks exactly like hover: ${JSON.stringify(before)} vs ${JSON.stringify(after)}`);
     await mouse("mouseMoved", { x: 5, y: 400 }, { button: "none" });
     await sleep(50);
-    expect(await ev(`!!document.querySelector(".earmark-pop.earmark-breakdown")`), "stays open when the pointer leaves");
-    await click(`.earmark-seg[data-kind="shares"]`);
+    expect(await ev(`!!document.querySelector(".zahlbar-pop.zahlbar-breakdown")`), "stays open when the pointer leaves");
+    await click(`.zahlbar-seg[data-kind="shares"]`);
     await sleep(80);
-    expect(!(await ev(`!!document.querySelector(".earmark-pop")`)), "clicking the segment again closes it, without reopening");
+    expect(!(await ev(`!!document.querySelector(".zahlbar-pop")`)), "clicking the segment again closes it, without reopening");
     await mouse("mouseMoved", { x: 5, y: 400 }, { button: "none" });
-    await hover(`.earmark-seg[data-kind="shares"]`);
+    await hover(`.zahlbar-seg[data-kind="shares"]`);
     await sleep(80);
-    const hov2 = await box(".earmark-tooltip .earmark-breakdown");
-    await click(`.earmark-seg[data-kind="shares"]`);
+    const hov2 = await box(".zahlbar-tooltip .zahlbar-breakdown");
+    await click(`.zahlbar-seg[data-kind="shares"]`);
     await sleep(80);
-    const frz2 = await box(".earmark-pop.earmark-breakdown");
+    const frz2 = await box(".zahlbar-pop.zahlbar-breakdown");
     expect(hov2.x === frz2.x && hov2.y === frz2.y, `refreezes in place, ${JSON.stringify(hov2)} vs ${JSON.stringify(frz2)}`);
-    await click(`.earmark-seg[data-kind="left"]`);
+    await click(`.zahlbar-seg[data-kind="left"]`);
     await sleep(80);
-    expect(!(await ev(`!!document.querySelector(".earmark-pop")`)), "clicking another segment while frozen just closes");
-    await hover(`.earmark-seg[data-kind="shares"]`);
+    expect(!(await ev(`!!document.querySelector(".zahlbar-pop")`)), "clicking another segment while frozen just closes");
+    await hover(`.zahlbar-seg[data-kind="shares"]`);
     await sleep(80);
-    await click(`.earmark-seg[data-kind="shares"]`);
+    await click(`.zahlbar-seg[data-kind="shares"]`);
     await sleep(80);
-    await click(`.earmark-pop .earmark-bd-row.is-link`);
+    await click(`.zahlbar-pop .zahlbar-bd-row.is-link`);
     await sleep(100);
-    expect((await ev(`document.activeElement?.closest(".earmark-row")?.querySelector(".earmark-name")?.value`)) === "Stock vest", "source line opens its amount for editing");
-    expect(!(await ev(`!!document.querySelector(".earmark-pop")`)), "breakdown closes");
-    await hover(`.earmark-seg[data-kind="left"]`);
+    expect((await ev(`document.activeElement?.closest(".zahlbar-row")?.querySelector(".zahlbar-name")?.value`)) === "Stock vest", "source line opens its amount for editing");
+    expect(!(await ev(`!!document.querySelector(".zahlbar-pop")`)), "breakdown closes");
+    await hover(`.zahlbar-seg[data-kind="left"]`);
     await sleep(80);
-    const cash = await rowsIn(".earmark-tooltip");
+    const cash = await rowsIn(".zahlbar-tooltip");
     expect(cash.at(-1) === "=Cash left over3\u00a0050 /mo" && cash.length === 6, `cash breakdown, got ${JSON.stringify(cash)}`);
   },
   async sell() {
     await boot();
-    await click(`.earmark-sec:nth-child(3) .earmark-add`);
+    await click(`.zahlbar-sec:nth-child(3) .zahlbar-add`);
     await sleep(150);
     await ev(`document.activeElement.select()`);
     await type("Sell shares");
@@ -279,45 +279,45 @@ const scenarios = {
     await key("Enter");
     await sleep(150);
     expect((await text()).includes("- Sell shares: -2 000\n"), "negative saving written with ASCII minus");
-    await click(`${row("Sell shares")} .earmark-sw`);
+    await click(`${row("Sell shares")} .zahlbar-sw`);
     await sleep(350);
-    expect((await ev(`document.querySelector(".earmark-pop-label")?.textContent`)) === "Comes out of", "label for taking money out");
-    await click(`.earmark-pop-forms button:nth-child(2)`);
+    expect((await ev(`document.querySelector(".zahlbar-pop-label")?.textContent`)) === "Comes out of", "label for taking money out");
+    await click(`.zahlbar-pop-forms button:nth-child(2)`);
     await sleep(200);
     await key("Escape");
     expect((await text()).includes("- Sell shares: -2 000 {shares}\n"), "sale from shares");
-    await click(`${row("Sell shares")} .earmark-sw`);
+    await click(`${row("Sell shares")} .zahlbar-sw`);
     await sleep(350);
-    expect((await ev(`[...document.querySelectorAll(".earmark-pop-dir button")].map(b => b.textContent + (b.classList.contains("is-on") ? "*" : "")).join(",")`)) === "Buy,Sell*", "Buy/Sell toggle shows Sell");
-    await click(`.earmark-pop-dir button:first-child`);
+    expect((await ev(`[...document.querySelectorAll(".zahlbar-pop-dir button")].map(b => b.textContent + (b.classList.contains("is-on") ? "*" : "")).join(",")`)) === "Buy,Sell*", "Buy/Sell toggle shows Sell");
+    await click(`.zahlbar-pop-dir button:first-child`);
     await sleep(200);
     expect((await text()).includes("- Sell shares: 2 000 {shares}\n"), "Buy flips the amount positive");
-    expect((await ev(`document.querySelector(".earmark-pop-label")?.textContent`)) === "Goes into", "label follows");
-    await click(`.earmark-pop-dir button:last-child`);
+    expect((await ev(`document.querySelector(".zahlbar-pop-label")?.textContent`)) === "Goes into", "label follows");
+    await click(`.zahlbar-pop-dir button:last-child`);
     await sleep(200);
     expect((await text()).includes("- Sell shares: -2 000 {shares}\n"), "Sell flips it back");
     await key("Escape");
     expect((await metric()) === "5\u00a0050", `cash left up by 2 000, got ${await metric()}`);
-    await hover(`.earmark-seg[data-kind="shares"]`);
+    await hover(`.zahlbar-seg[data-kind="shares"]`);
     await sleep(80);
-    const rows = await ev(`[...document.querySelectorAll(".earmark-tooltip .earmark-bd-row")].map(r => r.textContent)`);
+    const rows = await ev(`[...document.querySelectorAll(".zahlbar-tooltip .zahlbar-bd-row")].map(r => r.textContent)`);
     expect(rows.includes("−Sell shares2\u00a0000") && rows.at(-1) === "=Kept as shares4\u00a0000 /mo", `kept shares reduced, got ${JSON.stringify(rows)}`);
-    await fill(`${row("Sell shares")} .earmark-amount`, "-9000");
-    expect(await ev(`!!document.querySelector('.earmark-seg[data-kind="fromShares"]')`), "selling more than received draws on held shares");
+    await fill(`${row("Sell shares")} .zahlbar-amount`, "-9000");
+    expect(await ev(`!!document.querySelector('.zahlbar-seg[data-kind="fromShares"]')`), "selling more than received draws on held shares");
   },
   async remove() {
     await boot();
     await hover(row("Leisure"));
-    await click(`${row("Leisure")} .earmark-x`);
+    await click(`${row("Leisure")} .zahlbar-x`);
     await sleep(150);
     expect(!(await text()).includes("Leisure"), "removed");
-    await click(`.notice .earmark-undo`);
+    await click(`.notice .zahlbar-undo`);
     await sleep(150);
     expect((await text()) === example, "undo restores the note exactly");
   },
   async add() {
     await boot();
-    await click(`.earmark-sec:nth-child(3) .earmark-add`);
+    await click(`.zahlbar-sec:nth-child(3) .zahlbar-add`);
     await sleep(150);
     expect((await text()).includes("- Stock purchase plan: 5 000\n- New entry: 0\n"), "added at end of Saving");
     expect((await ev(`document.activeElement?.value`)) === "New entry", "name focused");
@@ -333,26 +333,26 @@ const scenarios = {
   },
   async drag() {
     await boot();
-    await drag(`${row("Food")} .earmark-grip`, row("Rent"));
+    await drag(`${row("Food")} .zahlbar-grip`, row("Rent"));
     await sleep(200);
     const order = await fileNames("Living");
     expect(order[0] === "Food" && order[1] === "Rent", `Food moved above Rent in the note, got ${order.slice(0, 3)}`);
     expect((await names("living"))[0] === "Food", "list follows");
-    await drag(`${row("Food")} .earmark-grip`, row("Glasses"), 28);
+    await drag(`${row("Food")} .zahlbar-grip`, row("Glasses"), 28);
     await sleep(200);
     const order2 = await fileNames("Living");
     expect(order2[order2.length - 1] === "Food", `Food moved to the end, got ${order2.join(",")}`);
   },
   async sortAndView() {
     await boot();
-    await click(`.earmark-head .earmark-segctl:last-of-type button[data-v="amount"]`);
+    await click(`.zahlbar-head .zahlbar-segctl:last-of-type button[data-v="amount"]`);
     await sleep(150);
     expect((await text()).includes("sort: amount\n"), "sort saved in frontmatter");
     const living = await names("living");
     expect(living[0] === "Rent" && living[1] === "Leisure", `largest first, got ${living.slice(0, 3)}`);
     expect((await fileNames("Living"))[1] === "Car", "note keeps its order");
-    expect(await ev(`getComputedStyle(document.querySelector(".earmark-grip"), "::after").display === "none"`), "no grip while sorted");
-    await click(`.earmark-head .earmark-segctl button[data-v="year"]`);
+    expect(await ev(`getComputedStyle(document.querySelector(".zahlbar-grip"), "::after").display === "none"`), "no grip while sorted");
+    await click(`.zahlbar-head .zahlbar-segctl button[data-v="year"]`);
     await sleep(150);
     expect((await text()).includes("view: year\n"), "view saved");
     expect((await metric()) === "36 600", `year metric 36 600, got ${await metric()}`);
@@ -361,20 +361,20 @@ const scenarios = {
     await boot();
     await ev(`__em.external(${JSON.stringify(PLAN)}, __em.text(${JSON.stringify(PLAN)}).replace("- Rent: 9 500", "- Rent: 7 000"))`);
     await sleep(150);
-    expect((await ev(`document.querySelector('${row("Rent")} .earmark-amount').value`)) === "7 000", "hand edit shows in pane");
+    expect((await ev(`document.querySelector('${row("Rent")} .zahlbar-amount').value`)) === "7 000", "hand edit shows in pane");
     // the note changes without the pane noticing, then an edit aimed at the old line is refused
     await ev(`__em.external(${JSON.stringify(PLAN)}, __em.text(${JSON.stringify(PLAN)}).replace("- Rent: 7 000", "- Rent: 7 100"), true)`);
-    await fill(`${row("Rent")} .earmark-amount`, "1");
+    await fill(`${row("Rent")} .zahlbar-amount`, "1");
     expect((await text()).includes("- Rent: 7 100\n"), "stale edit not written");
     expect(await ev(`[...document.querySelectorAll(".notice")].some(n => n.textContent.includes("changed"))`), "notice about reload");
-    expect((await ev(`document.querySelector('${row("Rent")} .earmark-amount').value`)) === "7 100", "reloaded");
+    expect((await ev(`document.querySelector('${row("Rent")} .zahlbar-amount').value`)) === "7 100", "reloaded");
   },
   async resize() {
     await boot();
-    const listW = () => ev(`Math.round(document.querySelector(".earmark-list").getBoundingClientRect().width)`);
-    const nameW = () => ev(`Math.round(document.querySelector(".earmark-namecell").getBoundingClientRect().width)`);
+    const listW = () => ev(`Math.round(document.querySelector(".zahlbar-list").getBoundingClientRect().width)`);
+    const nameW = () => ev(`Math.round(document.querySelector(".zahlbar-namecell").getBoundingClientRect().width)`);
     const w0 = await listW(), n0 = await nameW();
-    const d = await point(".earmark-divider");
+    const d = await point(".zahlbar-divider");
     await mouse("mouseMoved", d, { button: "none" });
     await mouse("mousePressed", d, { clickCount: 1, buttons: 1 });
     for (let i = 1; i <= 5; i++) await mouse("mouseMoved", { x: d.x + i * 30, y: d.y }, { buttons: 1 });
@@ -383,37 +383,37 @@ const scenarios = {
     expect((await listW()) === w0 + 150, `list widened by 150, ${w0} -> ${await listW()}`);
     expect((await nameW()) === n0 + 150, "name column gets the extra space");
     expect((await ev(`__em.savedWidth`)) === w0 + 150, "width saved");
-    const d1 = await point(".earmark-divider");
+    const d1 = await point(".zahlbar-divider");
     await mouse("mouseMoved", d1, { button: "none" });
     await mouse("mousePressed", d1, { clickCount: 1, buttons: 1 });
     await mouse("mouseMoved", { x: d1.x - 300, y: d1.y }, { buttons: 1 });
     await mouse("mouseReleased", { x: d1.x - 300, y: d1.y }, { clickCount: 1 });
     await sleep(100);
     expect((await listW()) === w0, "can't go below the default width");
-    const d2 = await point(".earmark-divider");
+    const d2 = await point(".zahlbar-divider");
     await mouse("mousePressed", d2, { clickCount: 1, buttons: 1 });
     await mouse("mouseMoved", { x: 1290, y: d2.y }, { buttons: 1 });
     await mouse("mouseReleased", { x: 1290, y: d2.y }, { clickCount: 1 });
     await sleep(150);
-    expect((await ev(`Math.round(document.querySelector(".earmark-chartcol").getBoundingClientRect().width)`)) >= 360, "chart keeps at least 360px");
-    await dblclick(".earmark-divider");
+    expect((await ev(`Math.round(document.querySelector(".zahlbar-chartcol").getBoundingClientRect().width)`)) >= 360, "chart keeps at least 360px");
+    await dblclick(".zahlbar-divider");
     await sleep(100);
     expect((await listW()) === w0 && (await ev(`__em.savedWidth`)) === null, "double-click resets");
   },
   async badAndEmpty() {
     const bad = example.replace("- Food: 4 000", "- Food: 4 000\n- Gym: tbd");
     await boot({ [PLAN]: bad, "Notes.md": "# Notes\n" }, PLAN);
-    expect((await ev(`document.querySelector(".earmark-badline")?.textContent`)) === "Gym: tbd", "bad line listed");
-    await click(".earmark-badline");
+    expect((await ev(`document.querySelector(".zahlbar-badline")?.textContent`)) === "Gym: tbd", "bad line listed");
+    await click(".zahlbar-badline");
     await sleep(50);
     const opened = await ev(`JSON.stringify(__em.opened)`);
     expect((await ev(`__em.opened.at(-1)?.line`)) === bad.split("\n").indexOf("- Gym: tbd"), `jumps to the line, opened ${opened}`);
     await boot({ "Notes.md": "# Notes\n" }, "Notes.md");
-    expect(await ev(`document.querySelector(".earmark-empty").textContent.includes("isn't a plan")`), "explains a non-plan note");
-    await click(".earmark-empty .mod-cta");
+    expect(await ev(`document.querySelector(".zahlbar-empty").textContent.includes("isn't a plan")`), "explains a non-plan note");
+    await click(".zahlbar-empty .mod-cta");
     await sleep(150);
-    expect((await ev(`__em.text("Notes.md")`)).startsWith("---\nearmark: 1\n---\n"), "Make it a plan adds the flag");
-    expect(await ev(`!document.querySelector(".earmark-body").hidden`), "plan view shown");
+    expect((await ev(`__em.text("Notes.md")`)).startsWith("---\nzahlbar: 1\n---\n"), "Make it a plan adds the flag");
+    expect(await ev(`!document.querySelector(".zahlbar-body").hidden`), "plan view shown");
   }
 };
 
@@ -448,8 +448,8 @@ if (args.shots) {
     await boot({ [PLAN]: readFileSync(args.plan, "utf8") });
     await shot("plan.png", 1300, 900);
     for (const kind of ["shares", "short"]) {
-      if (!(await ev(`!!document.querySelector('.earmark-seg[data-kind="${kind}"]')`))) continue;
-      await click(`.earmark-seg[data-kind="${kind}"]`);
+      if (!(await ev(`!!document.querySelector('.zahlbar-seg[data-kind="${kind}"]')`))) continue;
+      await click(`.zahlbar-seg[data-kind="${kind}"]`);
       await sleep(150);
       await shot(`plan-${kind}.png`, 1300, 900);
       await key("Escape");

@@ -45,39 +45,39 @@ const per = (view: View) => (view === "month" ? "/mo" : "/y");
 export function renderList(root: HTMLElement, host: ListHost): void {
   closePopover();
   root.replaceChildren();
-  root.classList.toggle("earmark-sorted", host.sort !== "manual");
+  root.classList.toggle("zahlbar-sorted", host.sort !== "manual");
   const { plan, view } = host;
 
   for (const sec of SECTIONS) {
     const list = ordered(plan.entries, sec, host.sort);
     const total = list.filter((e) => !e.hidden).reduce((a, e) => a + shown(e, view), 0);
-    const box = h("div", { class: "earmark-sec" },
-      h("div", { class: "earmark-sec-head" }, h("span", {}, SECTION_TITLES[sec]), h("span", {}, `${formatRounded(total)} ${per(view)}`)));
+    const box = h("div", { class: "zahlbar-sec" },
+      h("div", { class: "zahlbar-sec-head" }, h("span", {}, SECTION_TITLES[sec]), h("span", {}, `${formatRounded(total)} ${per(view)}`)));
     for (const e of list) box.append(row(e, host));
-    const add = h("button", { class: "earmark-add" }, "+ Add");
+    const add = h("button", { class: "zahlbar-add" }, "+ Add");
     add.addEventListener("click", () => void host.add(sec));
     box.append(add);
     root.append(box);
   }
 
   if (plan.bad.length) {
-    const foot = h("div", { class: "earmark-bad" }, `${plan.bad.length} ${plan.bad.length === 1 ? "line" : "lines"} not understood:`);
+    const foot = h("div", { class: "zahlbar-bad" }, `${plan.bad.length} ${plan.bad.length === 1 ? "line" : "lines"} not understood:`);
     for (const b of plan.bad) {
-      const a = h("button", { class: "earmark-badline", title: `${b.reason}. Click to open the note at this line.` }, b.text);
+      const a = h("button", { class: "zahlbar-badline", title: `${b.reason}. Click to open the note at this line.` }, b.text);
       a.addEventListener("click", () => host.openLine(b.line));
       foot.append(a);
     }
     root.append(foot);
   }
 
-  root.querySelectorAll<HTMLInputElement>(".earmark-name").forEach(fitName);
+  root.querySelectorAll<HTMLInputElement>(".zahlbar-name").forEach(fitName);
   // fonts may not have loaded on the first render
-  requestAnimationFrame(() => root.querySelectorAll<HTMLInputElement>(".earmark-name").forEach(fitName));
+  requestAnimationFrame(() => root.querySelectorAll<HTMLInputElement>(".zahlbar-name").forEach(fitName));
 
   const f = host.focusNext;
   host.focusNext = null;
   if (f) {
-    const el = root.querySelector<HTMLInputElement>(`.earmark-row[data-id="${f.line}"] .earmark-${f.field}`);
+    const el = root.querySelector<HTMLInputElement>(`.zahlbar-row[data-id="${f.line}"] .zahlbar-${f.field}`);
     if (el) {
       el.focus();
       el.select();
@@ -88,10 +88,10 @@ export function renderList(root: HTMLElement, host: ListHost): void {
 function row(e: Entry, host: ListHost): HTMLElement {
   const id = entryId(e);
   const c = host.colorOf(e);
-  const r = h("div", { class: `earmark-row${e.hidden ? " is-off" : ""}${host.hoverId === id ? " is-hl" : ""}`, "data-id": id, "data-sec": e.section });
+  const r = h("div", { class: `zahlbar-row${e.hidden ? " is-off" : ""}${host.hoverId === id ? " is-hl" : ""}`, "data-id": id, "data-sec": e.section });
 
   const sw = h("button", {
-    class: `earmark-sw${e.form === "shares" ? " is-lines" : e.form === "pension" ? " is-dots" : ""}`,
+    class: `zahlbar-sw${e.form === "shares" ? " is-lines" : e.form === "pension" ? " is-dots" : ""}`,
     style: `background-color:${fillVar(c)};border-color:${borderVar(c)}`,
     title: "Click: colour and type. Double-click: hide or show",
     "aria-label": `${e.name}: colour, type, hide`
@@ -109,17 +109,17 @@ function row(e: Entry, host: ListHost): HTMLElement {
     timer = window.setTimeout(() => openPopover(sw, e, host), ev.detail === 0 ? 0 : 220);
   });
 
-  const name = h("input", { class: "earmark-name", value: e.name, spellcheck: "false", "aria-label": "Name" });
+  const name = h("input", { class: "zahlbar-name", value: e.name, spellcheck: "false", "aria-label": "Name" });
   name.addEventListener("input", () => fitName(name));
   editable(name, () => e.name, (v) => {
     const t = v.trim();
     return t && t !== e.name ? host.update(e, { name: t }, { line: e.line, field: "amount" }) : null;
   }, () => ({ line: e.line, field: "amount" }), host);
 
-  const grip = h("span", { class: "earmark-grip", title: host.sort === "manual" ? "Drag to reorder" : "Switch to As written to reorder" });
+  const grip = h("span", { class: "zahlbar-grip", title: host.sort === "manual" ? "Drag to reorder" : "Switch to As written to reorder" });
   grip.addEventListener("pointerdown", (ev) => startDrag(ev, e, host));
 
-  const amount = h("input", { class: "earmark-amount", value: formatAmount(e.amount, " "), spellcheck: "false", inputmode: "decimal", "aria-label": "Amount" });
+  const amount = h("input", { class: "zahlbar-amount", value: formatAmount(e.amount, " "), spellcheck: "false", inputmode: "decimal", "aria-label": "Amount" });
   const nextFocus = (): Focus | null => {
     const same = ordered(host.plan.entries, e.section, host.sort);
     const next = same[same.indexOf(e) + 1];
@@ -137,11 +137,11 @@ function row(e: Entry, host: ListHost): HTMLElement {
     return Object.keys(patch).length ? host.update(e, patch, nextFocus()) : null;
   }, nextFocus, host);
 
-  const conv = sameFreq(e.freq, native(host.view)) ? null : h("span", { class: "earmark-conv" }, `≈ ${formatRounded(shown(e, host.view))} ${per(host.view)}`);
-  const remove = h("button", { class: "earmark-x", title: "Remove", "aria-label": `Remove ${e.name}` }, "×");
+  const conv = sameFreq(e.freq, native(host.view)) ? null : h("span", { class: "zahlbar-conv" }, `≈ ${formatRounded(shown(e, host.view))} ${per(host.view)}`);
+  const remove = h("button", { class: "zahlbar-x", title: "Remove", "aria-label": `Remove ${e.name}` }, "×");
   remove.addEventListener("click", () => void host.remove(e));
 
-  r.append(sw, h("div", { class: "earmark-namecell" }, name, grip), h("div", { class: "earmark-amountcell" }, amount, conv), freqCell(e, host, r), remove);
+  r.append(sw, h("div", { class: "zahlbar-namecell" }, name, grip), h("div", { class: "zahlbar-amountcell" }, amount, conv), freqCell(e, host, r), remove);
   r.addEventListener("pointerenter", () => host.setHover(id));
   r.addEventListener("pointerleave", () => host.setHover(null));
   return r;
@@ -159,7 +159,7 @@ function editable(input: HTMLInputElement, original: () => string, commit: (v: s
       if (!p) {
         // nothing changed, just move on
         const f = next();
-        const el = f && input.closest(".earmark-list")?.querySelector<HTMLInputElement>(`.earmark-row[data-id="${f.line}"] .earmark-${f.field}`);
+        const el = f && input.closest(".zahlbar-list")?.querySelector<HTMLInputElement>(`.zahlbar-row[data-id="${f.line}"] .zahlbar-${f.field}`);
         if (el) {
           el.focus();
           el.select();
@@ -180,8 +180,8 @@ function editable(input: HTMLInputElement, original: () => string, commit: (v: s
 }
 
 function freqCell(e: Entry, host: ListHost, rowEl: HTMLElement): HTMLElement {
-  const cell = h("div", { class: "earmark-freqcell" });
-  const select = h("select", { class: "earmark-freq", "aria-label": "How often" });
+  const cell = h("div", { class: "zahlbar-freqcell" });
+  const select = h("select", { class: "zahlbar-freq", "aria-label": "How often" });
   const presetIndex = PRESETS.findIndex(([f]) => sameFreq(f, e.freq));
   PRESETS.forEach(([, label], i) => select.append(h("option", { value: String(i), selected: i === presetIndex }, label)));
   if (presetIndex < 0) select.append(h("option", { value: "current", selected: true }, freqLabel(e.freq)));
@@ -198,10 +198,10 @@ function freqCell(e: Entry, host: ListHost, rowEl: HTMLElement): HTMLElement {
 /** "every [N] [days|weeks|months|years]" in place of the dropdown. */
 function openCustom(cell: HTMLElement, e: Entry, host: ListHost, rowEl: HTMLElement): void {
   rowEl.classList.add("is-editing");
-  const n = h("input", { class: "earmark-freqn", type: "number", min: 1, step: 1, value: e.freq.n, "aria-label": "Every how many" });
-  const unit = h("select", { class: "earmark-frequ", "aria-label": "Unit" });
+  const n = h("input", { class: "zahlbar-freqn", type: "number", min: 1, step: 1, value: e.freq.n, "aria-label": "Every how many" });
+  const unit = h("select", { class: "zahlbar-frequ", "aria-label": "Unit" });
   for (const u of UNITS) unit.append(h("option", { value: u, selected: u === e.freq.unit }, `${u}s`));
-  const box = h("span", { class: "earmark-custom" }, "every ", n, unit);
+  const box = h("span", { class: "zahlbar-custom" }, "every ", n, unit);
   let closed = false;
   const close = (save: boolean) => {
     if (closed) return;
@@ -234,7 +234,7 @@ function openCustom(cell: HTMLElement, e: Entry, host: ListHost, rowEl: HTMLElem
 function startDrag(ev: PointerEvent, e: Entry, host: ListHost): void {
   if (host.sort !== "manual" || ev.button !== 0) return;
   ev.preventDefault();
-  const list = (ev.target as HTMLElement).closest<HTMLElement>(".earmark-list");
+  const list = (ev.target as HTMLElement).closest<HTMLElement>(".zahlbar-list");
   if (!list) return;
   const startY = ev.clientY;
   let active = false;
@@ -246,9 +246,9 @@ function startDrag(ev: PointerEvent, e: Entry, host: ListHost): void {
     if (!active) {
       if (Math.abs(m.clientY - startY) < 4) return;
       active = true;
-      document.body.classList.add("earmark-grabbing");
+      document.body.classList.add("zahlbar-grabbing");
     }
-    const rows = [...list.querySelectorAll<HTMLElement>(`.earmark-row[data-sec="${e.section}"]`)];
+    const rows = [...list.querySelectorAll<HTMLElement>(`.zahlbar-row[data-sec="${e.section}"]`)];
     const cur = rows.findIndex((r) => r.dataset.id === id);
     let to = rows.findIndex((r) => {
       const b = r.getBoundingClientRect();
@@ -259,13 +259,13 @@ function startDrag(ev: PointerEvent, e: Entry, host: ListHost): void {
     if (to === cur || cur < 0) return;
     index = to;
     host.previewMove(e, to);
-    list.querySelector(`.earmark-row[data-id="${id}"]`)?.classList.add("is-dragging");
+    list.querySelector(`.zahlbar-row[data-id="${id}"]`)?.classList.add("is-dragging");
   };
   const up = () => {
     window.removeEventListener("pointermove", move);
     window.removeEventListener("pointerup", up);
     window.removeEventListener("pointercancel", up);
-    document.body.classList.remove("earmark-grabbing");
+    document.body.classList.remove("zahlbar-grabbing");
     if (active && index !== from) void host.commitMove(e, index);
   };
   window.addEventListener("pointermove", move);
@@ -290,15 +290,15 @@ async function updateAndReopen(e: Entry, patch: EntryPatch, host: ListHost): Pro
   const line = e.line;
   await host.update(e, patch);
   const fresh = host.plan.entries.find((x) => x.line === line);
-  const sw = document.querySelector<HTMLElement>(`.earmark-row[data-id="${line}"] .earmark-sw`);
+  const sw = document.querySelector<HTMLElement>(`.zahlbar-row[data-id="${line}"] .zahlbar-sw`);
   if (fresh && sw) openPopover(sw, fresh, host);
 }
 
 function openPopover(anchor: HTMLElement, e: Entry, host: ListHost): void {
   closePopover();
   const current = host.colorOf(e);
-  const el = h("div", { class: "earmark-pop", role: "dialog", "aria-label": `${e.name} options` });
-  const pal = h("div", { class: "earmark-pal" });
+  const el = h("div", { class: "zahlbar-pop", role: "dialog", "aria-label": `${e.name} options` });
+  const pal = h("div", { class: "zahlbar-pal" });
   PALETTE.forEach((name, i) => {
     const b = h("button", { class: i === current ? "is-on" : "", title: name, "aria-label": name, style: `background:${fillVar(i)};border-color:${borderVar(i)}` });
     b.addEventListener("click", () => {
@@ -308,13 +308,13 @@ function openPopover(anchor: HTMLElement, e: Entry, host: ListHost): void {
     pal.append(b);
   });
   el.append(pal);
-  if (!e.color) el.append(h("div", { class: "earmark-pop-note" }, "Automatic colour"));
+  if (!e.color) el.append(h("div", { class: "zahlbar-pop-note" }, "Automatic colour"));
 
   const forms: Array<[Form, string]> | null =
     e.section === "income" || e.section === "saving" ? [["cash", "Cash"], ["shares", "Shares"], ["pension", "Pension"]] : e.section === "tax" ? [["cash", "Cash"], ["shares", "Shares"]] : null;
   if (forms) {
-    el.append(h("div", { class: "earmark-pop-sep" }), h("div", { class: "earmark-pop-label" }, e.section === "income" ? "Received as" : e.section === "saving" ? (e.amount < 0 ? "Comes out of" : "Goes into") : "Paid with"));
-    const seg = h("div", { class: "earmark-segctl earmark-pop-forms" });
+    el.append(h("div", { class: "zahlbar-pop-sep" }), h("div", { class: "zahlbar-pop-label" }, e.section === "income" ? "Received as" : e.section === "saving" ? (e.amount < 0 ? "Comes out of" : "Goes into") : "Paid with"));
+    const seg = h("div", { class: "zahlbar-segctl zahlbar-pop-forms" });
     for (const [f, label] of forms) {
       const b = h("button", { class: e.form === f ? "is-on" : "" }, label);
       b.addEventListener("click", () => {
@@ -327,7 +327,7 @@ function openPopover(anchor: HTMLElement, e: Entry, host: ListHost): void {
     // on saving, the sign says which way the money goes: buying shares or selling them
     if (e.section === "saving") {
       const labels: Record<Form, [string, string]> = { shares: ["Buy", "Sell"], pension: ["Pay in", "Take out"], cash: ["Save", "Withdraw"] };
-      const dir = h("div", { class: "earmark-segctl earmark-pop-forms earmark-pop-dir" });
+      const dir = h("div", { class: "zahlbar-segctl zahlbar-pop-forms zahlbar-pop-dir" });
       labels[e.form].forEach((label, i) => {
         const out = i === 1;
         const b = h("button", { class: (e.amount < 0) === out ? "is-on" : "" }, label);
@@ -340,12 +340,12 @@ function openPopover(anchor: HTMLElement, e: Entry, host: ListHost): void {
     }
   }
 
-  const hide = h("button", { class: "earmark-pop-item" }, h("span", {}, e.hidden ? "Show" : "Hide"), h("span", { class: "earmark-pop-hint" }, "double-click"));
+  const hide = h("button", { class: "zahlbar-pop-item" }, h("span", {}, e.hidden ? "Show" : "Hide"), h("span", { class: "zahlbar-pop-hint" }, "double-click"));
   hide.addEventListener("click", () => {
     closePopover();
     void host.update(e, { hidden: !e.hidden });
   });
-  el.append(h("div", { class: "earmark-pop-sep" }), hide);
+  el.append(h("div", { class: "zahlbar-pop-sep" }), hide);
 
   mountPopover(el, anchor.getBoundingClientRect());
 }

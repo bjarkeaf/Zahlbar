@@ -35,7 +35,7 @@ describe("parse", () => {
   });
 
   it("keeps lines it doesn't understand and says why", () => {
-    const p = parse("---\nearmark: 1\n---\n## Living\n- Gym: tbd\n- Rent: 9 500\n- Trip: 5 000 sometimes\n");
+    const p = parse("---\nzahlbar: 1\n---\n## Living\n- Gym: tbd\n- Rent: 9 500\n- Trip: 5 000 sometimes\n");
     expect(p.entries.map((e) => e.name)).toEqual(["Rent"]);
     expect(p.bad.map((b) => [b.text, b.reason])).toEqual([
       ["Gym: tbd", "no amount"],
@@ -61,7 +61,7 @@ describe("parse", () => {
     expect(p.entries.map((e) => e.name)).toEqual(["Salary"]);
   });
 
-  it("is not flagged without the earmark key", () => {
+  it("is not flagged without the zahlbar key", () => {
     expect(parse("# Notes\n## Income\n- Salary: 1\n").flagged).toBe(false);
   });
 });
@@ -92,8 +92,8 @@ describe("write", () => {
     expect(lines[a.line]).toBe("- Buffer: 1 000");
     expect(lines[a.line - 1]).toBe("- Stock purchase plan: 5 000");
 
-    const b = addEntry("---\nearmark: 1\n---\n## Income\n- Salary: 1\n\n## Living\n- Rent: 1\n", "tax", { name: "Tax", amount: 5 });
-    expect(b.text).toBe("---\nearmark: 1\n---\n## Income\n- Salary: 1\n\n## Tax\n- Tax: 5\n\n## Living\n- Rent: 1\n");
+    const b = addEntry("---\nzahlbar: 1\n---\n## Income\n- Salary: 1\n\n## Living\n- Rent: 1\n", "tax", { name: "Tax", amount: 5 });
+    expect(b.text).toBe("---\nzahlbar: 1\n---\n## Income\n- Salary: 1\n\n## Tax\n- Tax: 5\n\n## Living\n- Rent: 1\n");
     const c = addEntry("# Plan\n", "income", { name: "Salary", amount: 2 });
     expect(c.text).toBe("# Plan\n\n## Income\n- Salary: 2\n");
   });
