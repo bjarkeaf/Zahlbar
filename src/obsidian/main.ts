@@ -49,16 +49,21 @@ export default class ZahlbarPlugin extends Plugin implements ViewHost {
     void this.saveData(this.prefs);
   }
 
-  /** Opens the active note if it's a plan, else the last plan, else the first one, else a new one. */
+  /**
+   * Opens the active note if it's a plan, else the last plan, else the first one. With no plan at all it opens
+   * the pane's empty state, which offers to create one, rather than quietly making a note.
+   */
   async open(): Promise<void> {
     const active = this.app.workspace.getActiveFile();
     const last = this.prefs.lastFile ? this.app.vault.getAbstractFileByPath(this.prefs.lastFile) : null;
     const pick =
       (active && this.isPlan(active) ? active : null) ??
       (last instanceof TFile && this.isPlan(last) ? last : null) ??
-      this.planFiles()[0] ??
-      (await this.createPlan(""));
-    await this.openFile(pick);
+      this.planFiles()[0];
+    if (pick) return this.openFile(pick);
+    const leaf = this.app.workspace.getLeaf("tab");
+    await leaf.setViewState({ type: VIEW_TYPE, active: true, state: {} });
+    await this.app.workspace.revealLeaf(leaf);
   }
 
   async openFile(file: TFile): Promise<void> {
