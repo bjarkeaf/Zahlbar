@@ -491,7 +491,8 @@ export class ZahlbarView extends ItemView implements ListHost {
   render(): void {
     if (!this.ui) return;
     const { pick, body, empty } = this.ui;
-    pick.textContent = this.file ? this.plan.title ?? this.file.basename : "No plan";
+    // the file name identifies the plan, as in the tab and the plan menu. The note's heading is just text.
+    pick.textContent = this.file ? this.file.basename : "No plan";
     pick.append(h("span", { class: "zahlbar-caret" }, "▾"));
     const ready = !!this.file && this.plan.flagged;
     body.toggleAttribute("hidden", !ready);

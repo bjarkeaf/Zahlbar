@@ -137,7 +137,7 @@ const scenarios = {
     expect((await metric()) === "3 050", `cash left 3 050, got ${await metric()}`);
     expect((await ev(`document.querySelectorAll(".zahlbar-seg").length`)) > 8, "chart has segments");
     expect((await ev(`[...document.querySelectorAll(".zahlbar-chart text")].some(t => t.textContent === "Outgoings")`)), "Outgoings title");
-    expect((await ev(`document.querySelector(".zahlbar-pick").textContent`)).startsWith("Plan 2027"), "plan title in header");
+    expect((await ev(`document.querySelector(".zahlbar-pick").textContent`)) === "Plan 2027▾", "file name in header");
     expect(await ev(`[...document.querySelectorAll(".zahlbar-chart text")].some(t => t.textContent === "64\u00a0500 DKK/mo")`), "currency on the income total");
     expect((await ev(`document.querySelector(".zahlbar-metric").textContent`)) === "Cash left over3\u00a0050DKK/mo", `metric reads label, value, unit, got ${await ev(`document.querySelector(".zahlbar-metric").textContent`)}`);
     const lit = () => ev(`[...document.querySelectorAll(".zahlbar-row.is-hl .zahlbar-name")].map(i => i.value).join(",")`);
