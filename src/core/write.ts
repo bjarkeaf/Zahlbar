@@ -131,7 +131,7 @@ export function newPlanText(title: string, currency = "DKK"): string {
     "",
     "## Tax",
     "",
-    "## Saving",
+    "## Savings",
     "",
     "## Living",
     ""

@@ -90,8 +90,10 @@ export function parse(text: string): Plan {
     const h = HEADING.exec(line);
     if (h) {
       const key = (h[2] ?? "").trim().toLowerCase();
-      if ((SECTIONS as readonly string[]).includes(key)) {
-        section = key as Section;
+      // "Savings" is the heading Zahlbar writes, "Saving" is still read
+      const sec = key === "savings" ? "saving" : key;
+      if ((SECTIONS as readonly string[]).includes(sec)) {
+        section = sec as Section;
         plan.headings[section] ??= i;
       } else {
         section = undefined;
@@ -104,7 +106,7 @@ export function parse(text: string): Plan {
     if (!b) continue;
     const body = parseBody(b[2] ?? "");
     if (typeof body !== "string" && body.amount < 0 && section !== "saving")
-      plan.bad.push({ line: i, section, text: (b[2] ?? "").trim(), reason: "only Saving lines can be negative" });
+      plan.bad.push({ line: i, section, text: (b[2] ?? "").trim(), reason: "only Savings lines can be negative" });
     else if (typeof body === "string") plan.bad.push({ line: i, section, text: (b[2] ?? "").trim(), reason: body } satisfies BadLine);
     else plan.entries.push({ ...body, line: i, raw: line, section, prefix: b[1] ?? "- " });
   }

@@ -358,7 +358,7 @@ export class ZahlbarView extends ItemView implements ListHost {
       title: kind === "left" ? "Cash left over" : "Cash shortfall",
       total: t.cashLeft,
       lines: [...pick("income", "cash").map(plus), ...takenOut().map(plus), ...group("Tax paid in cash", pick("tax", "cash")),
-        ...group("Saving", pick("saving").filter((e) => e.amount > 0)), ...group("Living", pick("living"))]
+        ...group("Savings", pick("saving").filter((e) => e.amount > 0)), ...group("Living", pick("living"))]
     };
   }
 
@@ -561,11 +561,11 @@ export class ZahlbarView extends ItemView implements ListHost {
       return el;
     };
     this.ui.metrics.replaceChildren(
+      // same order as the Outgoings bar, top down. Living, saved and tax add up to income.
       metric("Cash left over", formatRounded(t.cashLeft), this.unit(), ["left", "short"], t.cashLeft < -0.5),
-      // tax, living and saved add up to income
-      metric("Tax", formatRounded(t.tax), pct(t.taxRate), ["tax"]),
       metric("Living", formatRounded(t.living), pct(t.income > 0 ? t.living / t.income : 0), ["living"]),
-      metric("Saved", formatRounded(t.income - t.tax - t.living), pct(t.savedRate), ["saving", "left"], false, "Income minus tax and living, including shares and pension")
+      metric("Saved", formatRounded(t.income - t.tax - t.living), pct(t.savedRate), ["saving", "left"], false, "Income minus tax and living, including shares and pension"),
+      metric("Tax", formatRounded(t.tax), pct(t.taxRate), ["tax"])
     );
   }
 

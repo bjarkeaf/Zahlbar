@@ -19,7 +19,7 @@ Copy [examples/Example plan.md](examples/Example%20plan.md) into your vault and 
 
 ## Writing a plan
 
-A plan is a note with `zahlbar: 1` in its frontmatter and four headings: Income, Tax, Saving and Living. Each bullet is one entry.
+A plan is a note with `zahlbar: 1` in its frontmatter and four headings: Income, Tax, Savings and Living. Each bullet is one entry.
 
 ```markdown
 ---
@@ -35,7 +35,7 @@ currency: EUR
 - Income tax: 2 200
 - Tax on vest: 1 600 quarterly {shares}
 
-## Saving
+## Savings
 - Sell shares: -1 000 quarterly {shares}
 
 ## Living
@@ -43,7 +43,7 @@ currency: EUR
 - ~~Car: 400~~
 ```
 
-Amounts are per occurrence and monthly unless you say otherwise. `{shares}` and `{pension}` mark money you can't spend, and on a tax line `{shares}` means it's paid by selling shares. A negative Saving line takes money out. Strike a line through to leave it out of the totals. [FORMAT.md](FORMAT.md) has the full syntax and how the totals are calculated.
+Amounts are per occurrence and monthly unless you say otherwise. `{shares}` and `{pension}` mark money you can't spend, and on a tax line `{shares}` means it's paid by selling shares. A negative Savings line takes money out. Strike a line through to leave it out of the totals. [FORMAT.md](FORMAT.md) has the full syntax and how the totals are calculated.
 
 ## Licence
 

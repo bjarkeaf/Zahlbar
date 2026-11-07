@@ -1,6 +1,6 @@
 export const SECTIONS = ["income", "tax", "saving", "living"] as const;
 export type Section = (typeof SECTIONS)[number];
-export const SECTION_TITLES: Record<Section, string> = { income: "Income", tax: "Tax", saving: "Saving", living: "Living" };
+export const SECTION_TITLES: Record<Section, string> = { income: "Income", tax: "Tax", saving: "Savings", living: "Living" };
 
 export type Unit = "day" | "week" | "month" | "year";
 /** "Every n units". Presets like quarterly are just named values (every 3 months). */

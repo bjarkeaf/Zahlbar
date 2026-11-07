@@ -26,7 +26,7 @@ Entries live under four headings, at any heading level, matched without regard t
 |---|---|
 | `Income` | Money coming in |
 | `Tax` | Tax, on any income |
-| `Saving` | Money set aside (or taken out, see negative amounts) |
+| `Savings` | Money set aside (or taken out, see negative amounts). `Saving` is also accepted |
 | `Living` | Spending |
 
 Any other heading ends the current section. Text outside these sections is ignored and kept as-is. So are prose, blank lines, nested bullets and code blocks inside them.
@@ -61,14 +61,14 @@ Attributes go in braces at the end of the line, separated by commas. Unknown att
 | `shares` | Income | Received as shares, not cash |
 | `pension` | Income | Paid into a pension for you, not cash |
 | `shares` | Tax | Paid by selling shares (sell-to-cover), not from cash |
-| `shares` / `pension` | Saving | Positive: the cash goes into shares or pension. Negative: taken out of shares or pension into cash |
+| `shares` / `pension` | Savings | Positive: the cash goes into shares or pension. Negative: taken out of shares or pension into cash |
 | `beige` `cyan` `green` `lilac` `sand` `blue` `rose` `mint` `stone` `lavender` | any | Colour in the chart |
 
 `cash` is the default and is never written.
 
 ### Negative amounts
 
-Only Saving lines may be negative. A negative amount takes money out, e.g. selling shares:
+Only Savings lines may be negative. A negative amount takes money out, e.g. selling shares:
 
 ```
 - Sell shares: -5 000 quarterly {shares}
@@ -84,14 +84,14 @@ All amounts are converted to a yearly value. The month view divides by 12.
 |---|---|
 | Income | sum of Income |
 | Cash in | Income without `shares` or `pension` |
-| Cash out | Tax, Saving and Living, minus tax paid with `shares`. A negative Saving line reduces cash out |
+| Cash out | Tax, Savings and Living, minus tax paid with `shares`. A negative Savings line reduces cash out |
 | **Cash left over** | cash in − cash out (negative = shortfall) |
-| **Kept as shares** | Income `shares` − Tax `shares` − shares sold (negative Saving `shares`) |
-| **Kept as pension** | Income `pension` − pension taken out (negative Saving `pension`) |
+| **Kept as shares** | Income `shares` − Tax `shares` − shares sold (negative Savings `shares`) |
+| **Kept as pension** | Income `pension` − pension taken out (negative Savings `pension`) |
 | Tax rate | Tax ÷ Income |
 | Saved | (Income − Tax − Living) ÷ Income |
 
-These always add up: Income = Tax + positive Saving + Living + kept as shares + kept as pension + cash left over.
+These always add up: Income = Tax + positive Savings + Living + kept as shares + kept as pension + cash left over.
 
 ## Example
 
@@ -112,7 +112,7 @@ currency: DKK
 - Income tax: 18 000
 - Tax on vest: 12 000 quarterly {shares}
 
-## Saving
+## Savings
 - Stock purchase plan: 5 000 {shares}
 - Own pension: 2 000 {pension}
 - Sell shares: -3 000 quarterly {shares}

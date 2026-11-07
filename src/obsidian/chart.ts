@@ -68,7 +68,7 @@ function mergeSmall(segs: Seg[], k: number): Seg[] {
   return out;
 }
 
-const GROUP_NAMES: Record<string, string> = { tax: "Tax", saving: "Saving", living: "Living", left: "Left over" };
+const GROUP_NAMES: Record<string, string> = { tax: "Tax", saving: "Savings", living: "Living", left: "Left over" };
 
 /** Draws both bars into `svg` at its real pixel size. Bars fill bottom-up, first entry on the baseline. */
 /** Draws both bars into `svg` at its real pixel size. Returns the segment ids in each group, for highlighting. */

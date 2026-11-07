@@ -52,8 +52,13 @@ describe("parse", () => {
   it("reads negative saving lines, and refuses negatives elsewhere", () => {
     const p = parse("## Saving\n- Sell shares: -5 000 {shares}\n- Buffer: −1.000\n## Living\n- Refund: -100\n");
     expect(p.entries.map((e) => [e.name, e.amount])).toEqual([["Sell shares", -5000], ["Buffer", -1000]]);
-    expect(p.bad).toMatchObject([{ text: "Refund: -100", reason: "only Saving lines can be negative" }]);
+    expect(p.bad).toMatchObject([{ text: "Refund: -100", reason: "only Savings lines can be negative" }]);
     expect(serializeEntry(p.entries[1]!)).toBe("- Buffer: -1 000");
+  });
+
+  it("reads both Savings and Saving as the heading", () => {
+    expect(parse("## Savings\n- A: 1\n").entries[0]?.section).toBe("saving");
+    expect(parse("## Saving\n- A: 1\n").entries[0]?.section).toBe("saving");
   });
 
   it("ignores bullets outside sections, nested bullets and code blocks", () => {

@@ -21,7 +21,7 @@ A made-up yearly plan for someone paid partly in company shares. Amounts are bef
 - Tax on holiday pay: 550 yearly
 - Top tax (estimate): 1 200 yearly
 
-## Saving
+## Savings
 - Share purchase plan: 1 850 {shares}
 - Own pension: 375 {pension}
 - Sell vested shares: -2 000 quarterly {shares}
