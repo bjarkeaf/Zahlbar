@@ -27,8 +27,9 @@ export interface ViewHost {
 const ref = (e: Entry): EntryRef => ({ line: e.line, raw: e.raw });
 
 /** Segments Earmark computes rather than reads from a line. */
-type Computed = "shares" | "pension" | "left" | "short";
-const isComputed = (k: string | null | undefined): k is Computed => k === "shares" || k === "pension" || k === "left" || k === "short";
+type Computed = "shares" | "pension" | "fromShares" | "fromPension" | "left" | "short";
+const COMPUTED = ["shares", "pension", "fromShares", "fromPension", "left", "short"];
+const isComputed = (k: string | null | undefined): k is Computed => !!k && COMPUTED.includes(k);
 interface BreakdownLine {
   sign: "+" | "−";
   label: string;
@@ -321,17 +322,22 @@ export class EarmarkView extends ItemView implements ListHost {
   private breakdown(kind: Computed): { title: string; total: number; lines: BreakdownLine[] } {
     const t = totals(this.plan.entries, this.view);
     const visible = this.plan.entries.filter((e) => !e.hidden);
-    const plus = (e: Entry): BreakdownLine => ({ sign: "+", label: e.name, value: shown(e, this.view), e });
-    const minus = (e: Entry): BreakdownLine => ({ sign: "−", label: e.name, value: shown(e, this.view), e });
+    const plus = (e: Entry): BreakdownLine => ({ sign: "+", label: e.name, value: Math.abs(shown(e, this.view)), e });
+    const minus = (e: Entry): BreakdownLine => ({ sign: "−", label: e.name, value: Math.abs(shown(e, this.view)), e });
     const pick = (section: Section, form?: Entry["form"]) => visible.filter((e) => e.section === section && (!form || e.form === form));
-    if (kind === "shares") return { title: "Kept as shares", total: t.keptShares, lines: [...pick("income", "shares").map(plus), ...pick("tax", "shares").map(minus)] };
-    if (kind === "pension") return { title: "Kept as pension", total: t.keptPension, lines: pick("income", "pension").map(plus) };
+    const takenOut = (form?: Entry["form"]) => pick("saving", form).filter((e) => e.amount < 0);
+    if (kind === "shares" || kind === "fromShares")
+      return { title: kind === "shares" ? "Kept as shares" : "From shares you hold", total: t.keptShares,
+        lines: [...pick("income", "shares").map(plus), ...pick("tax", "shares").map(minus), ...takenOut("shares").map(minus)] };
+    if (kind === "pension" || kind === "fromPension")
+      return { title: kind === "pension" ? "Kept as pension" : "From pension", total: t.keptPension, lines: [...pick("income", "pension").map(plus), ...takenOut("pension").map(minus)] };
     const group = (label: string, es: Entry[]): BreakdownLine[] =>
       es.length ? [{ sign: "−", label, value: es.reduce((a, e) => a + shown(e, this.view), 0), group: es }] : [];
     return {
       title: kind === "left" ? "Cash left over" : "Cash shortfall",
       total: t.cashLeft,
-      lines: [...pick("income", "cash").map(plus), ...group("Tax paid in cash", pick("tax", "cash")), ...group("Saving", pick("saving")), ...group("Living", pick("living"))]
+      lines: [...pick("income", "cash").map(plus), ...takenOut().map(plus), ...group("Tax paid in cash", pick("tax", "cash")),
+        ...group("Saving", pick("saving").filter((e) => e.amount > 0)), ...group("Living", pick("living"))]
     };
   }
 
@@ -553,8 +559,9 @@ export class EarmarkView extends ItemView implements ListHost {
       } else if (es[0]) {
         const e = es[0];
         const conv = freqLabel(e.freq) === (this.view === "month" ? "monthly" : "yearly") ? "" : ` · ≈ ${formatRounded(shown(e, this.view))} ${per}`;
-        const share = t.income > 0 ? Math.round((shown(e, this.view) / t.income) * 100) : 0;
-        const form = e.form === "cash" ? "" : e.section === "income" ? ` · ${e.form}` : e.section === "tax" ? " · paid in shares" : ` · into ${e.form}`;
+        const share = t.income > 0 ? Math.round((Math.abs(shown(e, this.view)) / t.income) * 100) : 0;
+        const dir = e.amount < 0 ? "from" : "into";
+        const form = e.form === "cash" ? "" : e.section === "income" ? ` · ${e.form}` : e.section === "tax" ? " · paid in shares" : ` · ${dir} ${e.form}`;
         parts.push(line(e.name, "earmark-tt-title"), line(`${formatAmount(e.amount, "\u00a0")} ${freqLabel(e.freq)}${conv}`), line(`${share}% of income${form}`));
       }
     }

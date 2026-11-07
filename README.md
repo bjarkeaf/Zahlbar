@@ -43,6 +43,7 @@ currency: DKK
   - `{shares}` or `{pension}` on income means money you can't spend. Shares are drawn with diagonal lines and pension with dots, the same on both bars and in the list.
   - `{shares}` on a tax line means the tax is paid by selling shares (sell-to-cover).
   - `{shares}` or `{pension}` on a saving line says what the money goes into. It's still paid from cash, so cash left over doesn't change.
+  - A negative saving line takes money out, e.g. `- Sell shares: -5 000 {shares}`. Kept as shares drops and cash left over rises by the same amount. If you sell more than you receive, the extra shows as "From shares you hold" on top of Income. The same works for `{pension}` or for cash savings. Only Saving lines can be negative.
   - A colour name like `{rose}` picks the colour.
 - **Hidden entries:** strike through (`~~ ~~`) to hide an entry. It stays in the note but is left out of every total.
 - **Everything else** in the note (prose, other headings, nested bullets) is left alone. A bullet Earmark can't read is listed at the bottom of the pane, so you can fix it.

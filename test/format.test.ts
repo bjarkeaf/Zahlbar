@@ -16,7 +16,14 @@ describe("parseAmount", () => {
     ["9 500", 9500]
   ])("%s -> %d", (text, n) => expect(parseAmount(text)).toBe(n));
 
-  it.each(["", "abc", "12.", "-5", "5,"])("rejects %j", (text) => expect(parseAmount(text)).toBeUndefined());
+  it("reads a leading minus", () => {
+    expect(parseAmount("-5")).toBe(-5);
+    expect(parseAmount("−2 000")).toBe(-2000);
+    expect(parseAmount("-2k")).toBe(-2000);
+    expect(parseAmountInput("-5000 yearly")).toEqual({ amount: -5000, freq: { n: 1, unit: "year" } });
+  });
+
+  it.each(["", "abc", "12.", "--5", "5,"])("rejects %j", (text) => expect(parseAmount(text)).toBeUndefined());
 });
 
 describe("formatAmount", () => {

@@ -27,7 +27,7 @@ export interface NewEntry {
 /** Writes one entry line. Monthly is the default and is left out. */
 export function serializeEntry(e: Pick<Entry, "prefix" | "name" | "amount" | "freq" | "form" | "color" | "hidden" | "extra">): string {
   const attrs = [...(e.form !== "cash" ? [e.form] : []), ...(e.color ? [e.color] : []), ...e.extra];
-  let body = `${e.name}: ${formatAmount(e.amount)}`;
+  let body = `${e.name}: ${formatAmount(e.amount, " ", "-")}`;
   if (!sameFreq(e.freq, MONTHLY)) body += ` ${freqLabel(e.freq)}`;
   if (attrs.length) body += ` {${attrs.join(", ")}}`;
   if (e.hidden) body = `~~${body}~~`;

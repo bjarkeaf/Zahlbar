@@ -16,9 +16,9 @@ export interface Totals {
   cashLeft: number;
   /** non-cash income (shares, pension) not used to pay tax by selling shares. Saving that happens by itself. */
   unspent: number;
-  /** the shares part of unspent: sellable within months */
+  /** shares received, minus tax paid in shares, minus shares sold. Negative means selling shares you already hold. */
   keptShares: number;
-  /** the pension part of unspent: locked until retirement */
+  /** pension paid in for you, minus pension taken out */
   keptPension: number;
   taxRate: number;
   /** (income - tax - living) / income, covering every form of saving */
@@ -38,6 +38,10 @@ export function totals(entries: Entry[], view: View): Totals {
   const cashOut = sum((e) => e.section !== "income") - paidInShares;
   const sharesIn = sum((e) => e.section === "income" && e.form === "shares");
   const pensionIn = sum((e) => e.section === "income" && e.form === "pension");
+  // a negative saving line takes money out: sold shares or a pension payout turn into cash
+  const takenOut = (form: Entry["form"]) => -sum((e) => e.section === "saving" && e.form === form && e.amount < 0);
+  const keptShares = sharesIn - paidInShares - takenOut("shares");
+  const keptPension = pensionIn - takenOut("pension");
   const rate = (n: number) => (income > 0 ? n / income : 0);
   return {
     income,
@@ -47,9 +51,9 @@ export function totals(entries: Entry[], view: View): Totals {
     cashIn,
     cashOut,
     cashLeft: cashIn - cashOut,
-    unspent: income - cashIn - paidInShares,
-    keptShares: sharesIn - paidInShares,
-    keptPension: pensionIn,
+    unspent: keptShares + keptPension,
+    keptShares,
+    keptPension,
     taxRate: rate(tax),
     savedRate: rate(income - tax - living)
   };

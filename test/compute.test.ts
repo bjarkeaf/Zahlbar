@@ -50,6 +50,26 @@ describe("saving into shares or pension", () => {
   });
 });
 
+describe("taking money out of saving", () => {
+  const sell = (line: string) => parse(example.replace("- Own pension: 2 000", `- Own pension: 2 000\n${line}`));
+  it("selling shares moves money from kept shares to cash", () => {
+    const before = totals(parse(example).entries, "month");
+    const after = totals(sell("- Sell shares: -2 000 {shares}").entries, "month");
+    expect(after.keptShares).toBeCloseTo(before.keptShares - 2000);
+    expect(after.cashLeft).toBeCloseTo(before.cashLeft + 2000);
+    expect(after.saving).toBeCloseTo(before.saving - 2000);
+  });
+  it("can sell more than is received, drawing on shares already held", () => {
+    expect(totals(sell("- Sell shares: -10 000 {shares}").entries, "month").keptShares).toBeCloseTo(-4000);
+  });
+  it("a cash withdrawal only adds cash", () => {
+    const before = totals(parse(example).entries, "month");
+    const after = totals(sell("- From buffer: -1 000").entries, "month");
+    expect(after.cashLeft).toBeCloseTo(before.cashLeft + 1000);
+    expect(after.keptShares).toBeCloseTo(before.keptShares);
+  });
+});
+
 describe("ordered", () => {
   it("keeps file order, or sorts by yearly value", () => {
     const p = parse("## Living\n- Small: 100\n- Yearly: 10 000 yearly\n- Quarterly: 3 000 quarterly\n");

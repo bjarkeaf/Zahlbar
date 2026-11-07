@@ -304,7 +304,7 @@ function openPopover(anchor: HTMLElement, e: Entry, host: ListHost): void {
   const forms: Array<[Form, string]> | null =
     e.section === "income" || e.section === "saving" ? [["cash", "Cash"], ["shares", "Shares"], ["pension", "Pension"]] : e.section === "tax" ? [["cash", "Cash"], ["shares", "Shares"]] : null;
   if (forms) {
-    el.append(h("div", { class: "earmark-pop-sep" }), h("div", { class: "earmark-pop-label" }, e.section === "income" ? "Received as" : e.section === "saving" ? "Goes into" : "Paid with"));
+    el.append(h("div", { class: "earmark-pop-sep" }), h("div", { class: "earmark-pop-label" }, e.section === "income" ? "Received as" : e.section === "saving" ? (e.amount < 0 ? "Comes out of" : "Goes into") : "Paid with"));
     const seg = h("div", { class: "earmark-segctl earmark-pop-forms" });
     for (const [f, label] of forms) {
       const b = h("button", { class: e.form === f ? "is-on" : "" }, label);

@@ -266,6 +266,34 @@ const scenarios = {
     const cash = await rowsIn(".earmark-tooltip");
     expect(cash.at(-1) === "=Cash left over3\u00a0050 /mo" && cash.length === 6, `cash breakdown, got ${JSON.stringify(cash)}`);
   },
+  async sell() {
+    await boot();
+    await click(`.earmark-sec:nth-child(3) .earmark-add`);
+    await sleep(150);
+    await ev(`document.activeElement.select()`);
+    await type("Sell shares");
+    await key("Enter");
+    await sleep(150);
+    await ev(`document.activeElement.select()`);
+    await type("-2000");
+    await key("Enter");
+    await sleep(150);
+    expect((await text()).includes("- Sell shares: -2 000\n"), "negative saving written with ASCII minus");
+    await click(`${row("Sell shares")} .earmark-sw`);
+    await sleep(350);
+    expect((await ev(`document.querySelector(".earmark-pop-label")?.textContent`)) === "Comes out of", "label for taking money out");
+    await click(`.earmark-pop-forms button:nth-child(2)`);
+    await sleep(200);
+    await key("Escape");
+    expect((await text()).includes("- Sell shares: -2 000 {shares}\n"), "sale from shares");
+    expect((await metric()) === "5\u00a0050", `cash left up by 2 000, got ${await metric()}`);
+    await hover(`.earmark-seg[data-kind="shares"]`);
+    await sleep(80);
+    const rows = await ev(`[...document.querySelectorAll(".earmark-tooltip .earmark-bd-row")].map(r => r.textContent)`);
+    expect(rows.includes("−Sell shares2\u00a0000") && rows.at(-1) === "=Kept as shares4\u00a0000 /mo", `kept shares reduced, got ${JSON.stringify(rows)}`);
+    await fill(`${row("Sell shares")} .earmark-amount`, "-9000");
+    expect(await ev(`!!document.querySelector('.earmark-seg[data-kind="fromShares"]')`), "selling more than received draws on held shares");
+  },
   async remove() {
     await boot();
     await hover(row("Leisure"));

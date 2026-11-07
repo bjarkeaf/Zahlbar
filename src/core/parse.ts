@@ -6,7 +6,7 @@ const HEADING = /^(#{1,6})\s+(.+?)\s*#*\s*$/;
 // top-level bullets only, nested bullets are notes under an entry
 const BULLET = /^([-*+][ \t]+)(.*)$/;
 // name is everything before the last ": <number>", so names may contain colons
-const BODY = /^(.*\S)\s*:\s*(\d[\d\s.,\u00a0']*k?)(?:(?:\s+|(?=\/))(.*?))?\s*$/i;
+const BODY = /^(.*\S)\s*:\s*([-−]?\s*\d[\d\s.,\u00a0']*k?)(?:(?:\s+|(?=\/))(.*?))?\s*$/i;
 const FENCE = /^\s*(```|~~~)/;
 
 type Body = Omit<Entry, "line" | "raw" | "section" | "prefix">;
@@ -101,7 +101,9 @@ export function parse(text: string): Plan {
     const b = BULLET.exec(line);
     if (!b) continue;
     const body = parseBody(b[2] ?? "");
-    if (typeof body === "string") plan.bad.push({ line: i, section, text: (b[2] ?? "").trim(), reason: body } satisfies BadLine);
+    if (typeof body !== "string" && body.amount < 0 && section !== "saving")
+      plan.bad.push({ line: i, section, text: (b[2] ?? "").trim(), reason: "only Saving lines can be negative" });
+    else if (typeof body === "string") plan.bad.push({ line: i, section, text: (b[2] ?? "").trim(), reason: body } satisfies BadLine);
     else plan.entries.push({ ...body, line: i, raw: line, section, prefix: b[1] ?? "- " });
   }
   return plan;

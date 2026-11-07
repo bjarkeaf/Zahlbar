@@ -51,6 +51,9 @@ export function parseFreq(text: string): Freq | undefined {
  */
 export function parseAmount(text: string): number | undefined {
   let t = text.trim().toLowerCase().replace(/[\s\u00a0\u202f_']/g, "");
+  // a minus (ASCII or typographic) means money going the other way, only allowed on saving lines
+  const sign = /^[-−]/.test(t) ? -1 : 1;
+  t = t.replace(/^[-−]/, "");
   let mult = 1;
   if (t.endsWith("k")) {
     mult = 1000;
@@ -62,17 +65,17 @@ export function parseAmount(text: string): number | undefined {
     const sep = Math.max(t.lastIndexOf("."), t.lastIndexOf(","));
     if (sep >= 0) t = t.slice(0, sep).replace(/[.,]/g, "") + "." + t.slice(sep + 1);
   }
-  const n = Number(t) * mult;
-  return Number.isFinite(n) ? Math.round(n * 100) / 100 : undefined;
+  const n = Number(t) * mult * sign;
+  return Number.isFinite(n) ? Math.round(n * 100) / 100 + 0 : undefined;
 }
 
-/** "42000" -> "42 000". The note uses plain spaces, the UI passes a no-break space. */
-export function formatAmount(n: number, sep = " "): string {
+/** "42000" -> "42 000". The note uses plain spaces and "-", the UI passes a no-break space and "−". */
+export function formatAmount(n: number, sep = " ", minus = "−"): string {
   const neg = n < 0;
   const abs = Math.abs(Math.round(n * 100) / 100);
   const [int, dec] = abs.toString().split(".");
   const grouped = (int ?? "0").replace(/\B(?=(\d{3})+(?!\d))/g, sep);
-  return (neg ? "−" : "") + grouped + (dec ? "." + dec : "");
+  return (neg ? minus : "") + grouped + (dec ? "." + dec : "");
 }
 
 /** Whole numbers for display, so the chart and totals don't show stray decimals. */
@@ -83,7 +86,7 @@ export const formatTick = (n: number): string => (n >= 1000 ? `${+(n / 1000).toF
 
 /** What you type in an amount field: "120k yearly", "42 000 every 2 years", or just "4000". */
 export function parseAmountInput(text: string): { amount: number; freq: Freq | undefined } | undefined {
-  const m = /^\s*([\d\s.,\u00a0']*\d[.,\d]*\s*k?)\s*(.*?)\s*$/i.exec(text);
+  const m = /^\s*([-−]?[\d\s.,\u00a0']*\d[.,\d]*\s*k?)\s*(.*?)\s*$/i.exec(text);
   if (!m) return undefined;
   const amount = parseAmount(m[1] ?? "");
   if (amount === undefined) return undefined;

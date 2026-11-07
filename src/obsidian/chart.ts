@@ -9,7 +9,7 @@ const MIN_LABEL = 22;
 
 export type Texture = "none" | "lines" | "dots";
 export const textureOf = (form: Entry["form"]): Texture => (form === "shares" ? "lines" : form === "pension" ? "dots" : "none");
-export type SegKind = "entry" | "small" | "shares" | "pension" | "left" | "short";
+export type SegKind = "entry" | "small" | "shares" | "pension" | "fromShares" | "fromPension" | "left" | "short";
 interface Seg {
   kind: SegKind;
   ids: string[];
@@ -79,6 +79,9 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
     ...ordered(visible, "living", input.sort).map(toSeg)
   ];
   if (T.cashLeft > 0.5) s2.push({ kind: "left", ids: ["left"], v: T.cashLeft, name: "Cash left over", color: 0, texture: "none", group: "left" });
+  // selling more than you receive draws on what you already hold, shown as a source on top of Income
+  if (T.keptShares < -0.5) s1.push({ kind: "fromShares", ids: ["fromShares"], v: -T.keptShares, name: "From shares you hold", color: 0, texture: "lines", group: "from" });
+  if (T.keptPension < -0.5) s1.push({ kind: "fromPension", ids: ["fromPension"], v: -T.keptPension, name: "From pension", color: 0, texture: "dots", group: "from" });
   if (T.cashLeft < -0.5) s1.push({ kind: "short", ids: ["short"], v: -T.cashLeft, name: "Shortfall", color: 0, texture: "lines", group: "short" });
   s1 = s1.filter((x) => x.v > 0);
   s2 = s2.filter((x) => x.v > 0);
@@ -131,7 +134,9 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
     svg.append(s("text", { class: "earmark-faint", x: x + bw / 2, y: bottom + 33, "text-anchor": "middle" }, sub));
   };
   title(b1x, "Income", `${formatRounded(T.income)} ${per}`);
-  title(b2x, "Outgoings", `${formatRounded(T.tax + T.saving + T.living)} ${per}`);
+  // money taken out of saving isn't spending less, so the title only counts what goes out
+  const goingOut = visible.filter((e) => e.section !== "income" && e.amount > 0).reduce((a, e) => a + shown(e, view), 0);
+  title(b2x, "Outgoings", `${formatRounded(goingOut)} ${per}`);
 
   const fits = (t: string) => t.length * 6.4 < bw - 10;
   const bar = (segs: Seg[], x: number) => {
@@ -140,8 +145,8 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
       const yt = y(acc + sg.v), h = sg.v * k, gy = yt + 1, gh = Math.max(h - 2, 0.8), r = Math.min(6, gh / 2);
       acc += sg.v;
       let fill: string, stroke: string, dash: string | undefined;
-      if (sg.kind === "shares") [fill, stroke] = [`url(#${uid}-hn)`, "var(--earmark-neutral-b)"];
-      else if (sg.kind === "pension") [fill, stroke] = [`url(#${uid}-hp)`, "var(--earmark-neutral-b)"];
+      if (sg.kind === "shares" || sg.kind === "fromShares") [fill, stroke] = [`url(#${uid}-hn)`, "var(--earmark-neutral-b)"];
+      else if (sg.kind === "pension" || sg.kind === "fromPension") [fill, stroke] = [`url(#${uid}-hp)`, "var(--earmark-neutral-b)"];
       else if (sg.kind === "left") [fill, stroke, dash] = ["transparent", "var(--earmark-neutral-b)", "4 3"];
       else if (sg.kind === "short") [fill, stroke, dash] = [`url(#${uid}-he)`, "var(--text-error)", "4 3"];
       else if (sg.kind === "small") [fill, stroke] = ["var(--earmark-neutral)", "var(--earmark-neutral-b)"];
