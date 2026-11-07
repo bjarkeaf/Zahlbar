@@ -7,7 +7,7 @@ import { s } from "./dom";
 /** Segments thinner than this (px) are merged with their thin neighbours into "N small items". */
 const MIN_LABEL = 22;
 
-export type SegKind = "entry" | "small" | "unspent" | "left" | "short";
+export type SegKind = "entry" | "small" | "shares" | "pension" | "left" | "short";
 interface Seg {
   kind: SegKind;
   ids: string[];
@@ -64,8 +64,11 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
   const toSeg = (e: Entry): Seg => ({ kind: "entry", ids: [entryId(e)], v: shown(e, view), name: e.name, color: input.colorOf(e), hatch: e.form !== "cash", group: e.section });
 
   let s1 = ordered(visible, "income", input.sort).map(toSeg);
-  // shares and pension you keep are saving, so they sit at the top of the Saving group, not under "Left over"
-  const kept: Seg[] = T.unspent > 0.5 ? [{ kind: "unspent", ids: ["unspent"], v: T.unspent, name: "Kept as shares & pension", color: 0, hatch: true, group: "saving" }] : [];
+  // shares and pension you keep are saving, so they sit in the Saving group. They're separate because
+  // shares can be sold within months while pension is locked for decades.
+  const kept: Seg[] = [];
+  if (T.keptShares > 0.5) kept.push({ kind: "shares", ids: ["shares"], v: T.keptShares, name: "Kept as shares", color: 0, hatch: true, group: "saving" });
+  if (T.keptPension > 0.5) kept.push({ kind: "pension", ids: ["pension"], v: T.keptPension, name: "Kept as pension", color: 0, hatch: true, group: "saving" });
   let s2 = [
     ...ordered(visible, "tax", input.sort).map(toSeg),
     ...ordered(visible, "saving", input.sort).map(toSeg),
@@ -102,6 +105,8 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
       s("line", { x1: 1, y1: 0, x2: 1, y2: 7, style: `stroke:${line}`, "stroke-width": 1.6, opacity }));
   for (let i = 0; i < 10; i++) defs.append(hatch(`${uid}-h${i}`, fillVar(i), borderVar(i)));
   defs.append(hatch(`${uid}-hn`, null, "var(--earmark-neutral-b)", 1), hatch(`${uid}-he`, null, "var(--text-error)", 0.55));
+  defs.append(s("pattern", { id: `${uid}-hp`, patternUnits: "userSpaceOnUse", width: 6, height: 6 },
+    s("circle", { cx: 3, cy: 3, r: 1.1, style: "fill:var(--earmark-neutral-b)" })));
   svg.append(defs);
 
   for (let v = 0; v <= axisMax + 0.1; v += step) {
@@ -129,7 +134,8 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
       const yt = y(acc + sg.v), h = sg.v * k, gy = yt + 1, gh = Math.max(h - 2, 0.8), r = Math.min(6, gh / 2);
       acc += sg.v;
       let fill: string, stroke: string, dash: string | undefined;
-      if (sg.kind === "unspent") [fill, stroke] = [`url(#${uid}-hn)`, "var(--earmark-neutral-b)"];
+      if (sg.kind === "shares") [fill, stroke] = [`url(#${uid}-hn)`, "var(--earmark-neutral-b)"];
+      else if (sg.kind === "pension") [fill, stroke] = [`url(#${uid}-hp)`, "var(--earmark-neutral-b)"];
       else if (sg.kind === "left") [fill, stroke, dash] = ["transparent", "var(--earmark-neutral-b)", "4 3"];
       else if (sg.kind === "short") [fill, stroke, dash] = [`url(#${uid}-he)`, "var(--text-error)", "4 3"];
       else if (sg.kind === "small") [fill, stroke] = ["var(--earmark-neutral)", "var(--earmark-neutral-b)"];
@@ -139,7 +145,7 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
       const cx = x + bw / 2;
       const pct = T.income > 0 ? Math.round((sg.v / T.income) * 100) : 0;
       const err = sg.kind === "short" ? "earmark-error" : "";
-      const plate = sg.hatch || sg.kind === "unspent" || sg.kind === "short";
+      const plate = sg.hatch || sg.kind === "short";
       if (gh >= 50 && fits(sg.name)) {
         if (plate) g.append(s("rect", { class: "earmark-plate", x: cx - 50, y: gy + gh / 2 - 24, width: 100, height: 48, rx: 4 }));
         g.append(s("text", { x: cx, y: gy + gh / 2 - 8, "text-anchor": "middle", class: err }, sg.name));

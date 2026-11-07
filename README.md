@@ -60,7 +60,10 @@ Run **Earmark: Open plan** or click the piggy bank in the ribbon.
 **Chart**
 - Hover a row or a segment to see the two linked.
 - Thin segments merge into "N small items". Hover to see what's inside.
-- **Outgoings** stacks tax, saving and living, then what's left. Cash left over is drawn outlined, and unspent shares and pension are hatched.
+- **Outgoings** stacks tax, saving and living, then any spare cash ("Left over", outlined).
+- Shares and pension you receive and keep count as saving. They're shown separately, because shares can be sold within months and pension is locked for decades:
+  - **Kept as shares** is hatched, after any tax paid by selling shares.
+  - **Kept as pension** is dotted.
 - If cash runs short, a red "short" block sits on top of Income.
 
 **Toggles**

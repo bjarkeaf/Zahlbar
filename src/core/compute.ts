@@ -16,6 +16,10 @@ export interface Totals {
   cashLeft: number;
   /** non-cash income (shares, pension) not used to pay tax by selling shares. Saving that happens by itself. */
   unspent: number;
+  /** the shares part of unspent: sellable within months */
+  keptShares: number;
+  /** the pension part of unspent: locked until retirement */
+  keptPension: number;
   taxRate: number;
   /** (income - tax - living) / income, covering every form of saving */
   savedRate: number;
@@ -31,6 +35,8 @@ export function totals(entries: Entry[], view: View): Totals {
   const cashIn = sum((e) => e.section === "income" && e.form === "cash");
   const cashOut = sum((e) => e.section !== "income" && e.form === "cash");
   const paidInShares = sum((e) => e.section !== "income" && e.form !== "cash");
+  const sharesIn = sum((e) => e.section === "income" && e.form === "shares");
+  const pensionIn = sum((e) => e.section === "income" && e.form === "pension");
   const rate = (n: number) => (income > 0 ? n / income : 0);
   return {
     income,
@@ -41,6 +47,8 @@ export function totals(entries: Entry[], view: View): Totals {
     cashOut,
     cashLeft: cashIn - cashOut,
     unspent: income - cashIn - paidInShares,
+    keptShares: sharesIn - paidInShares,
+    keptPension: pensionIn,
     taxRate: rate(tax),
     savedRate: rate(income - tax - living)
   };

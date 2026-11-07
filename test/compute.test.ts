@@ -15,6 +15,8 @@ describe("totals on the example plan", () => {
     expect(t.living).toBeCloseTo(22450);
     expect(t.cashLeft).toBeCloseTo(3050);
     expect(t.unspent).toBeCloseTo(10000);
+    expect(t.keptShares).toBeCloseTo(6000);
+    expect(t.keptPension).toBeCloseTo(4000);
     expect(t.taxRate).toBeCloseTo(0.341, 3);
     expect(t.savedRate).toBeCloseTo(0.311, 3);
   });
