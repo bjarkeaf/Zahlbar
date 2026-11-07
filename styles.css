@@ -26,6 +26,10 @@
 .earmark button { box-shadow: none; }
 .earmark [hidden] { display: none !important; }
 .earmark *, .earmark-pop * { box-sizing: border-box; }
+/* lets the browser draw scrollbars and native dropdowns in the theme's mode */
+.theme-light .earmark, .theme-light .earmark-pop { color-scheme: light; }
+.theme-dark .earmark, .theme-dark .earmark-pop { color-scheme: dark; }
+.earmark-list, .earmark-body { scrollbar-width: thin; }
 
 /* header */
 .earmark-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-bottom: 1px solid var(--background-modifier-border); flex-wrap: wrap; }
