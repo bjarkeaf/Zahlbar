@@ -221,6 +221,21 @@ const scenarios = {
     expect((await text()).includes("- Food: 4 000 every 6 weeks\n"), "custom frequency");
     expect((await ev(`document.querySelector('${row("Food")} .earmark-freq').selectedOptions[0].textContent`)) === "every 6 weeks", "dropdown shows custom label");
   },
+  async breakdown() {
+    await boot();
+    await click(`.earmark-seg[data-kind="shares"]`);
+    await sleep(100);
+    const rows = await ev(`[...document.querySelectorAll(".earmark-breakdown .earmark-bd-row")].map(r => r.textContent)`);
+    expect(JSON.stringify(rows) === JSON.stringify(["+Stock vest10\u00a0000", "−Tax on vest4\u00a0000", "=Kept as shares6\u00a0000 /mo"]), `shares breakdown, got ${JSON.stringify(rows)}`);
+    await click(`.earmark-breakdown .earmark-bd-row.is-link`);
+    await sleep(100);
+    expect((await ev(`document.activeElement?.closest(".earmark-row")?.querySelector(".earmark-name")?.value`)) === "Stock vest", "line jumps to its row");
+    expect(!(await ev(`!!document.querySelector(".earmark-breakdown")`)), "breakdown closes");
+    await click(`.earmark-seg[data-kind="left"]`);
+    await sleep(100);
+    const cash = await ev(`[...document.querySelectorAll(".earmark-breakdown .earmark-bd-row")].map(r => r.textContent)`);
+    expect(cash.at(-1) === "=Cash left over3\u00a0050 /mo" && cash.length === 6, `cash breakdown, got ${JSON.stringify(cash)}`);
+  },
   async remove() {
     await boot();
     await hover(row("Leisure"));
@@ -363,6 +378,13 @@ if (args.shots) {
   if (args.plan) {
     await boot({ [PLAN]: readFileSync(args.plan, "utf8") });
     await shot("plan.png", 1300, 900);
+    for (const kind of ["shares", "short"]) {
+      if (!(await ev(`!!document.querySelector('.earmark-seg[data-kind="${kind}"]')`))) continue;
+      await click(`.earmark-seg[data-kind="${kind}"]`);
+      await sleep(150);
+      await shot(`plan-${kind}.png`, 1300, 900);
+      await key("Escape");
+    }
   }
   console.log("screenshots in harness/dist/");
 }

@@ -66,6 +66,7 @@ Run **Earmark: Open plan** or click the piggy bank in the ribbon.
   - **Kept as shares** has lines, and is what's left after any tax paid by selling shares.
   - **Kept as pension** is dotted.
 - If cash runs short, a red "short" block sits on top of Income.
+- Click a computed segment (kept as shares, kept as pension, cash left over, shortfall) to see how it's calculated, line by line. The lines it comes from light up on the bars, and clicking a line jumps to it in the list.
 
 **Toggles**
 - **Month | Year**: the month view averages anything that isn't monthly.

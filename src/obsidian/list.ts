@@ -332,11 +332,16 @@ function openPopover(anchor: HTMLElement, e: Entry, host: ListHost): void {
   });
   el.append(h("div", { class: "earmark-pop-sep" }), hide);
 
+  mountPopover(el, anchor.getBoundingClientRect());
+}
+
+/** Shows `el` as the one open popover, below `at` (or above it when there's no room), closing on Esc or a click outside. */
+export function mountPopover(el: HTMLElement, at: { left: number; top: number; bottom: number }, onClose?: () => void): void {
+  closePopover();
   document.body.append(el);
-  const r = anchor.getBoundingClientRect();
   const height = el.offsetHeight;
-  el.style.left = `${Math.max(4, Math.min(r.left, window.innerWidth - el.offsetWidth - 4))}px`;
-  el.style.top = `${r.bottom + 6 + height > window.innerHeight ? r.top - 6 - height : r.bottom + 6}px`;
+  el.style.left = `${Math.max(4, Math.min(at.left, window.innerWidth - el.offsetWidth - 4))}px`;
+  el.style.top = `${at.bottom + 6 + height > window.innerHeight ? Math.max(4, at.top - 6 - height) : at.bottom + 6}px`;
   pop = el;
 
   const outside = (ev: PointerEvent) => {
@@ -350,5 +355,6 @@ function openPopover(anchor: HTMLElement, e: Entry, host: ListHost): void {
   popCleanup = () => {
     document.removeEventListener("pointerdown", outside, true);
     document.removeEventListener("keydown", esc, true);
+    onClose?.();
   };
 }

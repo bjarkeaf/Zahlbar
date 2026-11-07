@@ -154,3 +154,16 @@ body.earmark-grabbing, body.earmark-grabbing * { cursor: grabbing !important; us
 .earmark-pop .earmark-pop-item:hover { background: var(--background-modifier-hover); }
 .earmark-pop-hint { font-size: 11px; color: var(--text-faint); }
 .earmark-undo { margin-left: 8px; }
+.earmark-tt-hint { color: var(--text-faint); font-size: 11px; margin-top: 2px; }
+
+/* breakdown of a computed segment */
+.earmark-pop.earmark-breakdown { width: 300px; }
+.earmark-bd-title { font-weight: 600; font-size: 13px; }
+.earmark-bd-rows { margin-top: 8px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.earmark-bd-row { display: grid; grid-template-columns: 14px 1fr auto; gap: 6px; padding: 2px 4px; border-radius: 4px; }
+.earmark-bd-row.is-link { cursor: pointer; }
+.earmark-bd-row.is-link:hover { background: var(--background-modifier-hover); }
+.earmark-bd-sign { color: var(--text-faint); }
+.earmark-bd-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.earmark-bd-total { border-top: 1px solid var(--background-modifier-border); margin-top: 4px; padding-top: 5px; font-weight: 600; }
+.earmark-bd-total.is-neg .earmark-bd-value { color: var(--text-error); }
