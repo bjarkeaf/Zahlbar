@@ -88,8 +88,9 @@ All amounts are converted to a yearly value. The month view divides by 12.
 | **Cash left over** | cash in − cash out (negative = shortfall) |
 | **Kept as shares** | Income `shares` − Tax `shares` − shares sold (negative Savings `shares`) |
 | **Kept as pension** | Income `pension` − pension taken out (negative Savings `pension`) |
-| Tax rate | Tax ÷ Income |
-| Saved | (Income − Tax − Living) ÷ Income |
+| Savings | positive Savings lines + kept as shares + kept as pension |
+
+The pane's bottom line shows cash left over, Living, Savings and Tax, each with its share of income. They add up to Income.
 
 These always add up: Income = Tax + positive Savings + Living + kept as shares + kept as pension + cash left over.
 

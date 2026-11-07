@@ -552,6 +552,7 @@ export class ZahlbarView extends ItemView implements ListHost {
   private renderMetrics(): void {
     const t = totals(this.plan.entries, this.view);
     const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
+    const savings = t.income - t.tax - t.living - t.cashLeft;
     // label, value, unit, and the groups it counts, which light up on hover
     const metric = (label: string, value: string, unit: string, groups: string[], neg = false, title?: string): HTMLElement => {
       const el = h("div", { class: `zahlbar-metric${neg ? " is-neg" : ""}`, title },
@@ -561,10 +562,11 @@ export class ZahlbarView extends ItemView implements ListHost {
       return el;
     };
     this.ui.metrics.replaceChildren(
-      // same order as the Outgoings bar, top down. Living, saved and tax add up to income.
+      // same order as the Outgoings bar, top down. All four add up to income.
       metric("Cash left over", formatRounded(t.cashLeft), this.unit(), ["left", "short"], t.cashLeft < -0.5),
       metric("Living", formatRounded(t.living), pct(t.income > 0 ? t.living / t.income : 0), ["living"]),
-      metric("Saved", formatRounded(t.income - t.tax - t.living), pct(t.savedRate), ["saving", "left"], false, "Income minus tax and living, including shares and pension"),
+      // the Savings bracket: saving lines plus the shares and pension you keep
+      metric("Savings", formatRounded(savings), pct(t.income > 0 ? savings / t.income : 0), ["saving"], false, "Including shares and pension you keep"),
       metric("Tax", formatRounded(t.tax), pct(t.taxRate), ["tax"])
     );
   }

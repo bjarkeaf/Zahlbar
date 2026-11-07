@@ -147,14 +147,14 @@ const scenarios = {
     await sleep(60);
     expect((await lit()) === "Income tax,Tax on vest", `hovering the tax bracket lights the tax rows, got ${await lit()}`);
     expect((await ev(`document.querySelectorAll(".zahlbar-seg.is-hl").length`)) === 2, "and their segments");
-    expect((await ev(`[...document.querySelectorAll(".zahlbar-metric")].map(m => m.textContent).join(" | ")`)) === "Cash left over3\u00a0050DKK/mo | Living22\u00a045034.8% | Saved20\u00a005031.1% | Tax22\u00a000034.1%", `metrics in bar order, got ${await ev(`[...document.querySelectorAll(".zahlbar-metric")].map(m => m.textContent).join(" | ")`)}`);
+    expect((await ev(`[...document.querySelectorAll(".zahlbar-metric")].map(m => m.textContent).join(" | ")`)) === "Cash left over3\u00a0050DKK/mo | Living22\u00a045034.8% | Savings17\u00a000026.4% | Tax22\u00a000034.1%", `metrics in bar order, got ${await ev(`[...document.querySelectorAll(".zahlbar-metric")].map(m => m.textContent).join(" | ")`)}`);
     await hover(".zahlbar-metric:nth-child(2)");
     await sleep(60);
     expect((await lit()).startsWith("Rent,Food"), `hovering Living lights living, got ${await lit()}`);
     await hover(".zahlbar-metric:nth-child(3)");
     await sleep(60);
-    expect((await lit()).startsWith("Own pension,Stock purchase plan"), `hovering Saved lights savings, got ${await lit()}`);
-    expect(await ev(`!!document.querySelector('.zahlbar-seg.is-hl[data-kind="left"]')`), "and cash left over");
+    expect((await lit()).startsWith("Own pension,Stock purchase plan"), `hovering Savings lights savings, got ${await lit()}`);
+    expect(!(await ev(`!!document.querySelector('.zahlbar-seg.is-hl[data-kind="left"]')`)), "but not cash left over");
     await hover(".zahlbar-metric:nth-child(4)");
     await sleep(60);
     expect((await lit()) === "Income tax,Tax on vest", `hovering Tax lights tax, got ${await lit()}`);
