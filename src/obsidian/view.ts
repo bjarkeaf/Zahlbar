@@ -47,6 +47,9 @@ export class EarmarkView extends ItemView implements ListHost {
   /** segments to keep highlighted while a breakdown is open */
   private pinned: Set<string> | null = null;
   private frozen = false;
+  /** when the frozen breakdown was closed, so the click that closed it doesn't also open a new one */
+  private unfrozenAt = 0;
+  private pressClosed = false;
   colorOf: ColorOf = colorMap([]);
 
   private lastWritten: string | null = null;
@@ -294,10 +297,14 @@ export class EarmarkView extends ItemView implements ListHost {
       this.setHover(null);
       this.applyHover();
     });
+    // the document-level handler that closes popovers runs first, so here we can tell if this press closed one
+    this.registerDomEvent(chartBox, "pointerdown", () => (this.pressClosed = Date.now() - this.unfrozenAt < 50));
     this.registerDomEvent(chartBox, "click", (ev) => {
       const g = (ev.target as Element).closest(".earmark-seg");
       const kind = g?.getAttribute("data-kind");
-      if (isComputed(kind)) return this.freezeBreakdown(kind);
+      // a click whose press closed a frozen breakdown only closes it
+      if (this.pressClosed) return;
+      if (isComputed(kind)) return this.freezeBreakdown(kind, ev);
       this.focusAmount(g?.getAttribute("data-ids")?.split(" ")[0]);
     });
   }
@@ -349,7 +356,7 @@ export class EarmarkView extends ItemView implements ListHost {
   }
 
   /** Click on a computed segment: keep its breakdown open where the hover showed it, so a source line can be clicked. */
-  private freezeBreakdown(kind: Computed): void {
+  private freezeBreakdown(kind: Computed, ev: MouseEvent): void {
     const { tooltip } = this.ui;
     const at = tooltip.classList.contains("is-shown") ? tooltip.getBoundingClientRect() : null;
     tooltip.classList.remove("is-shown");
@@ -358,9 +365,10 @@ export class EarmarkView extends ItemView implements ListHost {
     this.frozen = true;
     this.pinned = ids;
     this.applyHover();
-    const r = at ?? this.ui.chartBox.getBoundingClientRect();
+    const r = at ?? { left: ev.clientX + 14, top: ev.clientY + 14 };
     mountPopover(el, { left: r.left, top: r.top, bottom: r.top - 6 }, () => {
       this.frozen = false;
+      this.unfrozenAt = Date.now();
       this.pinned = null;
       this.applyHover();
     });
