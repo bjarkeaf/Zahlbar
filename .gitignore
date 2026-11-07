@@ -1,0 +1,26 @@
+# Agent and editor files
+.claude/
+CLAUDE.md
+AGENTS.md
+.cursor/
+.vscode/
+.idea/
+scratch/
+
+# Build
+node_modules/
+main.js
+*.tsbuildinfo
+harness/dist/
+
+# Real plans never go in the repo
+*.private.md
+plans/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test output
+coverage/
+*.log

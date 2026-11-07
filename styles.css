@@ -1,0 +1,146 @@
+/* Earmark. Only Obsidian theme variables, plus a soft palette with light and dark variants. */
+.earmark {
+  --earmark-c0: #e9ddd6; --earmark-c1: #bfe6ee; --earmark-c2: #d9e7c9; --earmark-c3: #e8d4ec; --earmark-c4: #f3e1b8;
+  --earmark-c5: #cfdcf3; --earmark-c6: #f2cfcf; --earmark-c7: #d3e9df; --earmark-c8: #e6e0cf; --earmark-c9: #dcd3f3;
+  --earmark-neutral: #eeeeee;
+}
+.theme-dark .earmark, .theme-dark .earmark-pop {
+  --earmark-c0: #5a4c44; --earmark-c1: #2f5a63; --earmark-c2: #4a5a3a; --earmark-c3: #574561; --earmark-c4: #6a5a33;
+  --earmark-c5: #3c4d6a; --earmark-c6: #6a3f3f; --earmark-c7: #3b5c50; --earmark-c8: #57523f; --earmark-c9: #4a4268;
+  --earmark-neutral: #2c2c2c;
+}
+.theme-light .earmark-pop {
+  --earmark-c0: #e9ddd6; --earmark-c1: #bfe6ee; --earmark-c2: #d9e7c9; --earmark-c3: #e8d4ec; --earmark-c4: #f3e1b8;
+  --earmark-c5: #cfdcf3; --earmark-c6: #f2cfcf; --earmark-c7: #d3e9df; --earmark-c8: #e6e0cf; --earmark-c9: #dcd3f3;
+}
+.earmark, .earmark-pop {
+  --earmark-c0b: color-mix(in srgb, var(--earmark-c0) 60%, var(--text-normal)); --earmark-c1b: color-mix(in srgb, var(--earmark-c1) 60%, var(--text-normal));
+  --earmark-c2b: color-mix(in srgb, var(--earmark-c2) 60%, var(--text-normal)); --earmark-c3b: color-mix(in srgb, var(--earmark-c3) 60%, var(--text-normal));
+  --earmark-c4b: color-mix(in srgb, var(--earmark-c4) 60%, var(--text-normal)); --earmark-c5b: color-mix(in srgb, var(--earmark-c5) 60%, var(--text-normal));
+  --earmark-c6b: color-mix(in srgb, var(--earmark-c6) 60%, var(--text-normal)); --earmark-c7b: color-mix(in srgb, var(--earmark-c7) 60%, var(--text-normal));
+  --earmark-c8b: color-mix(in srgb, var(--earmark-c8) 60%, var(--text-normal)); --earmark-c9b: color-mix(in srgb, var(--earmark-c9) 60%, var(--text-normal));
+  --earmark-neutral-b: color-mix(in srgb, var(--earmark-neutral) 50%, var(--text-faint));
+}
+
+.earmark.view-content { padding: 0; display: flex; flex-direction: column; container-type: inline-size; overflow: hidden; font-variant-numeric: tabular-nums; }
+.earmark button { box-shadow: none; }
+.earmark [hidden] { display: none !important; }
+.earmark *, .earmark-pop * { box-sizing: border-box; }
+
+/* header */
+.earmark-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-bottom: 1px solid var(--background-modifier-border); flex-wrap: wrap; }
+.earmark .earmark-pick { background: none; border: 0; font-weight: 600; font-size: var(--font-ui-medium); padding: 3px 8px; margin-left: -8px; height: auto; }
+.earmark .earmark-pick:hover { background: var(--background-modifier-hover); }
+.earmark-caret { color: var(--text-faint); font-weight: 400; margin-left: 4px; }
+.earmark-segctl { display: inline-flex; background: var(--background-secondary); border: 1px solid var(--background-modifier-border); border-radius: 7px; padding: 2px; }
+.earmark-segctl button { background: none; border: 0; height: auto; padding: 2px 10px; border-radius: 5px; color: var(--text-muted); font-size: var(--font-ui-smaller); }
+.earmark-segctl button:hover { color: var(--text-normal); }
+.earmark-segctl button.is-on { background: var(--background-primary); color: var(--text-normal); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12); }
+.earmark .earmark-info { position: relative; width: 18px; height: 18px; padding: 0; margin-left: -4px; border-radius: 50%; background: none;
+  border: 1px solid var(--text-faint); color: var(--text-faint); font-size: 11px; line-height: 16px; }
+.earmark-info::before { content: "i"; font-weight: 600; font-family: Georgia, serif; }
+.earmark-info:hover, .earmark-info:focus-visible { color: var(--text-normal); border-color: var(--text-muted); }
+.earmark-tipbox { display: none; position: absolute; left: 50%; top: 26px; transform: translateX(-50%); width: 230px; z-index: 6; text-align: left;
+  background: var(--background-primary); border: 1px solid var(--background-modifier-border); box-shadow: var(--shadow-s);
+  border-radius: 7px; padding: 7px 10px; font-size: var(--font-ui-smaller); line-height: 1.4; color: var(--text-muted); white-space: normal; font-family: var(--font-interface); }
+.earmark-info:hover .earmark-tipbox, .earmark-info:focus .earmark-tipbox { display: block; }
+
+/* layout */
+.earmark-body { flex: 1; min-height: 0; display: flex; }
+.earmark-list { width: 460px; flex: none; padding: 6px 14px 16px; border-right: 1px solid var(--background-modifier-border); overflow-y: auto; }
+.earmark-chartcol { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; }
+.earmark-chartbox { flex: 1; min-height: 0; margin: 12px 18px 8px; }
+.earmark-chart { width: 100%; height: 100%; display: block; overflow: visible; }
+@container (max-width: 860px) {
+  .earmark-body { flex-direction: column; overflow-y: auto; }
+  .earmark-chartcol { flex: none; height: 65vh; }
+  .earmark-list { width: 100%; border-right: 0; border-top: 1px solid var(--background-modifier-border); overflow: visible; order: 2; }
+}
+.earmark-empty { padding: 32px; color: var(--text-muted); display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+
+/* list */
+.earmark-sec { margin-top: 10px; }
+.earmark-sec-head { display: flex; justify-content: space-between; padding: 4px 6px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+.earmark-sec-head span:last-child { font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--text-faint); }
+.earmark-row { display: grid; grid-template-columns: 14px 1fr 72px 96px 18px; align-items: center; gap: 6px; padding: 2px 6px; border-radius: 6px; min-height: 30px; }
+.earmark-row:hover, .earmark-row.is-hl { background: var(--background-modifier-hover); }
+.earmark-row.is-editing { grid-template-columns: 14px 1fr 72px 142px 18px; }
+.earmark .earmark-sw { width: 14px; height: 14px; padding: 0; border-radius: 4px; border: 1px solid; cursor: pointer; }
+.earmark-sw.is-hatch { background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(0, 0, 0, 0.28) 3px 4.5px); }
+.earmark-row.is-off .earmark-sw { background: transparent !important; background-image: none; border-style: dashed; }
+.earmark-row.is-off .earmark-name, .earmark-row.is-off .earmark-amount { text-decoration: line-through; color: var(--text-faint); }
+.earmark-row input { font: inherit; font-size: var(--font-ui-small); color: inherit; background: transparent; border: 1px solid transparent; border-radius: 5px; padding: 2px 5px; min-width: 0; height: auto; }
+.earmark-row input:hover:not(:focus) { background: var(--background-modifier-hover); }
+.earmark-row input:focus { border-color: var(--interactive-accent); background: var(--background-primary); box-shadow: none; }
+.earmark-row input.is-invalid { border-color: var(--text-error); }
+.earmark-namecell { display: flex; align-items: center; min-width: 0; align-self: stretch; }
+.earmark-name { min-width: 2ch; max-width: 100%; margin-left: -1px; padding-left: 3px !important; text-overflow: ellipsis; }
+/* the free space between name and amount is the drag handle */
+.earmark-grip { flex: 1; min-width: 20px; align-self: stretch; cursor: grab; position: relative; touch-action: none; }
+.earmark-grip::after { content: ""; position: absolute; right: 4px; top: 50%; width: 8px; height: 13px; transform: translateY(-50%);
+  background-image: radial-gradient(circle, var(--text-faint) 1.1px, transparent 1.4px); background-size: 4px 4.33px; opacity: 0; }
+.earmark-row:hover .earmark-grip::after { opacity: 1; }
+.earmark-sorted .earmark-grip { cursor: default; }
+.earmark-sorted .earmark-grip::after { display: none; }
+.earmark-row.is-dragging { background: var(--background-primary); box-shadow: var(--shadow-s); position: relative; z-index: 2; }
+body.earmark-grabbing, body.earmark-grabbing * { cursor: grabbing !important; user-select: none; }
+.earmark-amountcell { display: flex; flex-direction: column; align-items: flex-end; }
+.earmark-amount { width: 100%; text-align: right; }
+.earmark-conv { white-space: nowrap; font-size: 10.5px; color: var(--text-faint); line-height: 1.1; margin-top: 1px; padding-right: 5px; }
+.earmark .earmark-freq { font-size: 12px; color: var(--text-faint); background: transparent; border: 0; border-radius: 5px; padding: 2px; height: auto;
+  cursor: pointer; appearance: none; -webkit-appearance: none; width: 100%; box-shadow: none; background-image: none; }
+.earmark .earmark-freq:hover, .earmark .earmark-freq:focus { background: var(--background-modifier-hover); color: var(--text-normal); }
+.earmark-custom { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-muted); }
+.earmark-custom input, .earmark .earmark-custom select { font-size: 12px; color: var(--text-normal); background: var(--background-primary);
+  border: 1px solid var(--interactive-accent); border-radius: 5px; padding: 1px 3px; height: auto; box-shadow: none; }
+.earmark-freqn { width: 40px; text-align: right; -moz-appearance: textfield; }
+.earmark-freqn::-webkit-inner-spin-button, .earmark-freqn::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.earmark .earmark-x { background: none; border: 0; padding: 0; height: auto; color: var(--text-faint); opacity: 0; font-size: 15px; }
+.earmark-row:hover .earmark-x, .earmark-x:focus-visible { opacity: 1; }
+.earmark .earmark-x:hover { color: var(--text-error); }
+.earmark .earmark-add { background: none; border: 0; height: auto; color: var(--text-faint); font-size: 12.5px; padding: 4px 8px; margin-left: 20px; }
+.earmark .earmark-add:hover { color: var(--text-normal); background: var(--background-modifier-hover); }
+.earmark-bad { margin: 12px 6px 0; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--background-modifier-border); padding-top: 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.earmark .earmark-badline { background: none; border: 0; height: auto; padding: 0; font-family: var(--font-monospace); font-size: 12px; color: var(--text-error); text-align: left; }
+
+/* chart */
+.earmark-chart text { fill: var(--text-normal); font-size: 11.5px; font-family: var(--font-interface); }
+.earmark-chart .earmark-faint { fill: var(--text-faint); font-size: 10.5px; }
+.earmark-chart .earmark-muted { fill: var(--text-muted); }
+.earmark-chart .earmark-bold { font-weight: 600; }
+.earmark-chart .earmark-small { font-size: 11px; }
+.earmark-chart .earmark-title { font-size: 13px; }
+.earmark-chart .earmark-error { fill: var(--text-error); }
+.earmark-chart .earmark-grid { stroke: var(--background-modifier-border); stroke-width: 1; }
+.earmark-chart .earmark-ref { stroke: var(--text-muted); stroke-dasharray: 2 3; }
+.earmark-chart .earmark-bracket { stroke: var(--text-faint); fill: none; }
+.earmark-chart .earmark-plate { fill: var(--background-primary); opacity: 0.8; }
+.earmark-chart .earmark-seg { cursor: pointer; transition: opacity 0.12s; }
+.earmark-chart.is-dimming .earmark-seg:not(.is-hl) { opacity: 0.35; }
+.earmark-metrics { display: flex; flex-wrap: wrap; gap: 6px 36px; padding: 10px 22px 12px; }
+.earmark-metric b { font-size: 18px; font-weight: 600; margin-right: 6px; }
+.earmark-metric span { font-size: 11.5px; color: var(--text-muted); }
+.earmark-metric.is-neg b { color: var(--text-error); }
+.earmark-tooltip { position: absolute; pointer-events: none; display: none; z-index: 4; white-space: nowrap; background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border); box-shadow: var(--shadow-s); border-radius: 7px; padding: 6px 9px; font-size: 12px; }
+.earmark-tooltip.is-shown { display: block; }
+.earmark-tt-title { font-weight: 600; }
+.earmark-tt-title.is-error { color: var(--text-error); }
+.earmark-tt-sub { color: var(--text-muted); }
+
+/* swatch popover */
+.earmark-pop { position: fixed; z-index: var(--layer-menu, 60); background: var(--background-primary); border: 1px solid var(--background-modifier-border);
+  border-radius: 8px; box-shadow: var(--shadow-l); padding: 8px; width: 196px; }
+.earmark-pal { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; justify-items: center; }
+.earmark-pal button { width: 26px; height: 26px; padding: 0; border-radius: 6px; border: 1px solid; box-shadow: none; }
+.earmark-pal button.is-on { outline: 2px solid var(--interactive-accent); outline-offset: 1px; }
+.earmark-pop-sep { height: 1px; background: var(--background-modifier-border); margin: 8px -8px 2px; }
+.earmark-pop-label { font-size: 11.5px; color: var(--text-muted); margin: 8px 0 4px; }
+.earmark-pop-note { font-size: 11.5px; color: var(--text-faint); margin-top: 4px; }
+.earmark-pop-forms { display: flex; }
+.earmark-pop-forms button { flex: 1; }
+.earmark-pop .earmark-pop-item { display: flex; justify-content: space-between; align-items: baseline; width: 100%; background: none; border: 0; box-shadow: none;
+  height: auto; font-size: 13px; padding: 5px 6px; border-radius: 5px; margin-top: 6px; }
+.earmark-pop .earmark-pop-item:hover { background: var(--background-modifier-hover); }
+.earmark-pop-hint { font-size: 11px; color: var(--text-faint); }
+.earmark-undo { margin-left: 8px; }

@@ -1,0 +1,9 @@
+{
+  "id": "earmark",
+  "name": "Earmark",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Plan income and outgoings in a Markdown note and see them as two stacked bars, per month or per year.",
+  "author": "Bjarke Frederiksen",
+  "isDesktopOnly": false
+}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Earmark harness</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  /* the handful of Obsidian theme variables the plugin uses */
+  body.theme-light {
+    --background-primary: #ffffff; --background-secondary: #f6f6f6; --background-modifier-border: #e3e3e3;
+    --background-modifier-hover: rgba(0,0,0,.05); --text-normal: #222; --text-muted: #5c5c5c; --text-faint: #ababab;
+    --text-error: #e93147; --interactive-accent: #7f6df2;
+  }
+  body.theme-dark {
+    --background-primary: #1e1e1e; --background-secondary: #262626; --background-modifier-border: #363636;
+    --background-modifier-hover: rgba(255,255,255,.06); --text-normal: #dadada; --text-muted: #b3b3b3; --text-faint: #6f6f6f;
+    --text-error: #fb464c; --interactive-accent: #8a7cf5;
+  }
+  body { --font-interface: Inter, system-ui, sans-serif; --font-monospace: ui-monospace, monospace; --font-ui-smaller: 12px; --font-ui-small: 14px;
+    --font-ui-medium: 15px; --shadow-s: 0 2px 8px rgba(0,0,0,.15); --shadow-l: 0 6px 24px rgba(0,0,0,.2);
+    margin: 0; font: 14px/1.45 var(--font-interface); background: var(--background-primary); color: var(--text-normal); }
+  button { font: inherit; color: inherit; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  select, input { font: inherit; }
+  #pane { position: fixed; inset: 0; display: flex; }
+  #pane > .view-content { flex: 1; min-width: 0; }
+  #notices { position: fixed; right: 12px; top: 12px; z-index: 100; display: flex; flex-direction: column; gap: 6px; }
+  .notice { background: var(--text-normal); color: var(--background-primary); padding: 8px 12px; border-radius: 6px; }
+  .menu { background: var(--background-primary); border: 1px solid var(--background-modifier-border); padding: 4px; border-radius: 6px; z-index: 100; }
+  .menu-item { padding: 4px 10px; cursor: pointer; } .menu-item.is-checked::before { content: "✓ "; }
+</style>
+</head>
+<body class="theme-light">
+<div id="pane"></div>
+<div id="notices"></div>
+<script src="dist/harness.js"></script>
+</body>
+</html>
