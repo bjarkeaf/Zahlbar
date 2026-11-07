@@ -285,6 +285,15 @@ export function closePopover(): void {
   pop = null;
 }
 
+/** Applies an edit from the popover, then reopens it on the freshly parsed entry so it shows the new state. */
+async function updateAndReopen(e: Entry, patch: EntryPatch, host: ListHost): Promise<void> {
+  const line = e.line;
+  await host.update(e, patch);
+  const fresh = host.plan.entries.find((x) => x.line === line);
+  const sw = document.querySelector<HTMLElement>(`.earmark-row[data-id="${line}"] .earmark-sw`);
+  if (fresh && sw) openPopover(sw, fresh, host);
+}
+
 function openPopover(anchor: HTMLElement, e: Entry, host: ListHost): void {
   closePopover();
   const current = host.colorOf(e);
@@ -308,18 +317,27 @@ function openPopover(anchor: HTMLElement, e: Entry, host: ListHost): void {
     const seg = h("div", { class: "earmark-segctl earmark-pop-forms" });
     for (const [f, label] of forms) {
       const b = h("button", { class: e.form === f ? "is-on" : "" }, label);
-      b.addEventListener("click", async () => {
-        if (f === e.form) return;
-        const line = e.line;
-        await host.update(e, { form: f });
-        // reopen on the freshly parsed entry so the popover shows the new state
-        const fresh = host.plan.entries.find((x) => x.line === line);
-        const sw = document.querySelector<HTMLElement>(`.earmark-row[data-id="${line}"] .earmark-sw`);
-        if (fresh && sw) openPopover(sw, fresh, host);
+      b.addEventListener("click", () => {
+        if (f !== e.form) void updateAndReopen(e, { form: f }, host);
       });
       seg.append(b);
     }
     el.append(seg);
+
+    // on saving, the sign says which way the money goes: buying shares or selling them
+    if (e.section === "saving") {
+      const labels: Record<Form, [string, string]> = { shares: ["Buy", "Sell"], pension: ["Pay in", "Take out"], cash: ["Save", "Withdraw"] };
+      const dir = h("div", { class: "earmark-segctl earmark-pop-forms earmark-pop-dir" });
+      labels[e.form].forEach((label, i) => {
+        const out = i === 1;
+        const b = h("button", { class: (e.amount < 0) === out ? "is-on" : "" }, label);
+        b.addEventListener("click", () => {
+          if ((e.amount < 0) !== out && e.amount !== 0) void updateAndReopen(e, { amount: -e.amount }, host);
+        });
+        dir.append(b);
+      });
+      el.append(dir);
+    }
   }
 
   const hide = h("button", { class: "earmark-pop-item" }, h("span", {}, e.hidden ? "Show" : "Hide"), h("span", { class: "earmark-pop-hint" }, "double-click"));

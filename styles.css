@@ -149,6 +149,7 @@ body.earmark-grabbing, body.earmark-grabbing * { cursor: grabbing !important; us
 .earmark-pop-note { font-size: 11.5px; color: var(--text-faint); margin-top: 4px; }
 .earmark-pop-forms { display: flex; }
 .earmark-pop-forms button { flex: 1; }
+.earmark-pop-dir { margin-top: 6px; }
 .earmark-pop .earmark-pop-item { display: flex; justify-content: space-between; align-items: baseline; width: 100%; background: none; border: 0; box-shadow: none;
   height: auto; font-size: 13px; padding: 5px 6px; border-radius: 5px; margin-top: 6px; }
 .earmark-pop .earmark-pop-item:hover { background: var(--background-modifier-hover); }

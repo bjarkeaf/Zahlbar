@@ -286,6 +286,17 @@ const scenarios = {
     await sleep(200);
     await key("Escape");
     expect((await text()).includes("- Sell shares: -2 000 {shares}\n"), "sale from shares");
+    await click(`${row("Sell shares")} .earmark-sw`);
+    await sleep(350);
+    expect((await ev(`[...document.querySelectorAll(".earmark-pop-dir button")].map(b => b.textContent + (b.classList.contains("is-on") ? "*" : "")).join(",")`)) === "Buy,Sell*", "Buy/Sell toggle shows Sell");
+    await click(`.earmark-pop-dir button:first-child`);
+    await sleep(200);
+    expect((await text()).includes("- Sell shares: 2 000 {shares}\n"), "Buy flips the amount positive");
+    expect((await ev(`document.querySelector(".earmark-pop-label")?.textContent`)) === "Goes into", "label follows");
+    await click(`.earmark-pop-dir button:last-child`);
+    await sleep(200);
+    expect((await text()).includes("- Sell shares: -2 000 {shares}\n"), "Sell flips it back");
+    await key("Escape");
     expect((await metric()) === "5\u00a0050", `cash left up by 2 000, got ${await metric()}`);
     await hover(`.earmark-seg[data-kind="shares"]`);
     await sleep(80);
