@@ -127,7 +127,8 @@ body.zahlbar-grabbing, body.zahlbar-grabbing * { cursor: grabbing !important; us
 .zahlbar-chart .zahlbar-plate { fill: var(--background-primary); opacity: 0.8; }
 .zahlbar-chart .zahlbar-seg { cursor: pointer; transition: opacity 0.12s; }
 .zahlbar-chart.is-dimming .zahlbar-seg:not(.is-hl) { opacity: 0.35; }
-.zahlbar-metrics { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 36px; padding: 10px 22px 12px; }
+/* bottom padding keeps the metrics clear of Obsidian's floating status bar */
+.zahlbar-metrics { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 36px; padding: 10px 22px 34px; }
 .zahlbar-metric b { font-size: 18px; font-weight: 600; margin-right: 6px; }
 .zahlbar-metric span { font-size: 11.5px; color: var(--text-muted); }
 .zahlbar-metric.is-neg b { color: var(--text-error); }

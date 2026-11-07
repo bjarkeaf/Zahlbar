@@ -2,7 +2,10 @@
 
 An Obsidian plugin for planning where your money goes. You write recurring income and outgoings in a plain Markdown note, and Zahlbar draws them as two stacked bars, **Income** and **Outgoings**, per month or per year.
 
-![Zahlbar showing the example plan](docs/screenshot-light.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">
+  <img alt="Zahlbar in Obsidian, showing the example plan" src="docs/screenshot-light.png">
+</picture>
 
 It is a forward-looking plan, not a ledger. There are no transactions, no bank import and no network calls. Your figures stay in your vault.
 
