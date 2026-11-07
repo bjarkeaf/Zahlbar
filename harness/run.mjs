@@ -285,6 +285,19 @@ const scenarios = {
     const cash = await rowsIn(".zahlbar-tooltip");
     expect(cash.at(-1) === "=Cash left over3\u00a0050 DKK/mo" && cash.length === 6, `cash breakdown, got ${JSON.stringify(cash)}`);
   },
+  async smallItems() {
+    await boot();
+    await hover(`.zahlbar-seg[data-kind="small"]`);
+    await sleep(80);
+    const rows = await ev(`[...document.querySelectorAll(".zahlbar-tooltip .zahlbar-bd-row")].map(r => r.textContent)`);
+    expect(rows.length >= 3 && rows.slice(0, -1).every((r) => r.startsWith("+")) && /^=\d+ small items/.test(rows.at(-1)), `small items hover shows a breakdown, got ${JSON.stringify(rows)}`);
+    await click(`.zahlbar-seg[data-kind="small"]`);
+    await sleep(80);
+    const first = await ev(`document.querySelector(".zahlbar-pop .zahlbar-bd-row.is-link .zahlbar-bd-label").textContent`);
+    await click(`.zahlbar-pop .zahlbar-bd-row.is-link`);
+    await sleep(100);
+    expect((await ev(`document.activeElement?.closest(".zahlbar-row")?.querySelector(".zahlbar-name")?.value`)) === first, `clicking a line opens ${first} for editing`);
+  },
   async sell() {
     await boot();
     await click(`.zahlbar-sec:nth-child(3) .zahlbar-add`);

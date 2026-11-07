@@ -27,9 +27,11 @@ export interface ViewHost {
 const ref = (e: Entry): EntryRef => ({ line: e.line, raw: e.raw });
 
 /** Segments Zahlbar computes rather than reads from a line. */
-type Computed = "shares" | "pension" | "fromShares" | "fromPension" | "left" | "short";
-const COMPUTED = ["shares", "pension", "fromShares", "fromPension", "left", "short"];
+/** Segments explained by a breakdown: the computed ones, and "N small items" which lists what it merged. */
+type Computed = "shares" | "pension" | "fromShares" | "fromPension" | "left" | "short" | "small";
+const COMPUTED = ["shares", "pension", "fromShares", "fromPension", "left", "short", "small"];
 const isComputed = (k: string | null | undefined): k is Computed => !!k && COMPUTED.includes(k);
+const segIds = (g: Element | null | undefined): string[] => (g?.getAttribute("data-ids") ?? "").split(" ").filter((x) => x !== "");
 interface BreakdownLine {
   sign: "+" | "−";
   label: string;
@@ -307,7 +309,7 @@ export class ZahlbarView extends ItemView implements ListHost {
       const kind = g?.getAttribute("data-kind");
       // a click whose press closed a frozen breakdown only closes it
       if (this.pressClosed) return;
-      if (isComputed(kind)) return this.freezeBreakdown(kind, ev);
+      if (isComputed(kind)) return this.freezeBreakdown(kind, ev, segIds(g));
       this.focusAmount(g?.getAttribute("data-ids")?.split(" ")[0]);
     });
   }
@@ -321,7 +323,12 @@ export class ZahlbarView extends ItemView implements ListHost {
   }
 
   /** Which lines feed into a computed segment, with + and −, and its total. */
-  private breakdown(kind: Computed): { title: string; total: number; lines: BreakdownLine[] } {
+  private breakdown(kind: Computed, ids: string[]): { title: string; total: number; lines: BreakdownLine[] } {
+    if (kind === "small") {
+      const es = ids.map((id) => this.plan.entries.find((e) => entryId(e) === id)).filter((e): e is Entry => !!e);
+      const lines = es.map((e): BreakdownLine => ({ sign: "+", label: e.name, value: shown(e, this.view), e }));
+      return { title: `${es.length} small items`, total: lines.reduce((a, l) => a + l.value, 0), lines };
+    }
     const t = totals(this.plan.entries, this.view);
     const visible = this.plan.entries.filter((e) => !e.hidden);
     const plus = (e: Entry): BreakdownLine => ({ sign: "+", label: e.name, value: Math.abs(shown(e, this.view)), e });
@@ -343,8 +350,8 @@ export class ZahlbarView extends ItemView implements ListHost {
     };
   }
 
-  private breakdownEl(kind: Computed, interactive: boolean): { el: HTMLElement; ids: Set<string> } {
-    const { title, total, lines } = this.breakdown(kind);
+  private breakdownEl(kind: Computed, interactive: boolean, segIdsOf: string[] = []): { el: HTMLElement; ids: Set<string> } {
+    const { title, total, lines } = this.breakdown(kind, segIdsOf);
     const per = this.unit();
     const row = (sign: string, label: string, value: string, cls = "") =>
       h("div", { class: `zahlbar-bd-row ${cls}` }, h("span", { class: "zahlbar-bd-sign" }, sign), h("span", { class: "zahlbar-bd-label" }, label), h("span", { class: "zahlbar-bd-value" }, value));
@@ -364,14 +371,14 @@ export class ZahlbarView extends ItemView implements ListHost {
   }
 
   /** Click on a computed segment: keep its breakdown open where the hover showed it, so a source line can be clicked. */
-  private freezeBreakdown(kind: Computed, ev: MouseEvent): void {
+  private freezeBreakdown(kind: Computed, ev: MouseEvent, ids: string[]): void {
     const { tooltip } = this.ui;
     const at = tooltip.classList.contains("is-shown") ? tooltip.getBoundingClientRect() : null;
     tooltip.classList.remove("is-shown");
-    const { el, ids } = this.breakdownEl(kind, true);
+    const { el, ids: lit } = this.breakdownEl(kind, true, ids);
     el.classList.add("zahlbar-pop");
     this.frozen = true;
-    this.pinned = ids;
+    this.pinned = lit;
     this.applyHover();
     const r = at ?? { left: ev.clientX + 14, top: ev.clientY + 14 };
     mountPopover(el, { left: r.left, top: r.top, bottom: r.top - 6 }, () => {
@@ -574,7 +581,7 @@ export class ZahlbarView extends ItemView implements ListHost {
     this.setHover(ids[0] ?? null);
     const parts: HTMLElement[] = [];
     if (isComputed(kind)) {
-      const b = this.breakdownEl(kind, false);
+      const b = this.breakdownEl(kind, false, ids);
       parts.push(b.el);
       this.pinned = b.ids;
     } else {
