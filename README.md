@@ -1,6 +1,6 @@
 # Zahlbar
 
-Simple financial planner that visualizes income and expenses as two bars. Obsidian plugin, so your plans are stored as Markdown files.
+Simple financial planner plugin for Obsidian that visualizes income and expenses as two bars. Your plans are stored as human-readable Markdown files.
 
 The name is German for payable, and also reads as *Zahl* (number) plus bar.
 
