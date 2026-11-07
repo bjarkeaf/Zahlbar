@@ -69,6 +69,10 @@ describe("formatTick", () => {
     expect(formatTick(2500)).toBe("2.5k");
     expect(formatTick(0.30000000000000004)).toBe("0");
     expect(formatTick(300)).toBe("300");
+    expect(formatTick(1000000)).toBe("1M");
+    expect(formatTick(1200000)).toBe("1.2M");
+    expect(formatTick(1250000)).toBe("1.25M");
+    expect(formatTick(999000)).toBe("999k");
   });
 });
 

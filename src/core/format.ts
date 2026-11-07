@@ -81,8 +81,9 @@ export function formatAmount(n: number, sep = " ", minus = "−"): string {
 /** Whole numbers for display, so the chart and totals don't show stray decimals. */
 export const formatRounded = (n: number, sep = "\u00a0"): string => formatAmount(Math.round(n), sep);
 
-/** Short axis label: 25000 -> "25k". */
-export const formatTick = (n: number): string => (n >= 1000 ? `${+(n / 1000).toFixed(1)}k` : String(Math.round(n)));
+/** Short axis label: 25000 -> "25k", 1250000 -> "1.25M". */
+export const formatTick = (n: number): string =>
+  n >= 1e6 ? `${+(n / 1e6).toFixed(2)}M` : n >= 1000 ? `${+(n / 1000).toFixed(1)}k` : String(Math.round(n));
 
 /** What you type in an amount field: "120k yearly", "42 000 every 2 years", or just "4000". */
 export function parseAmountInput(text: string): { amount: number; freq: Freq | undefined } | undefined {
