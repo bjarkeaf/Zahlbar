@@ -46,6 +46,7 @@ currency: DKK
   - A negative saving line takes money out, e.g. `- Sell shares: -5 000 {shares}`. Kept as shares drops and cash left over rises by the same amount. If you sell more than you receive, the extra shows as "From shares you hold" on top of Income. The same works for `{pension}` or for cash savings. Only Saving lines can be negative. The swatch popover has a Buy/Sell toggle (Pay in/Take out for pension, Save/Withdraw for cash) that flips the sign.
   - A colour name like `{rose}` picks the colour.
 - **Hidden entries:** strike through (`~~ ~~`) to hide an entry. It stays in the note but is left out of every total.
+- **Full reference:** [FORMAT.md](FORMAT.md) describes the format precisely, for editing by hand or with scripts and AI agents. Plans made by the plugin link to it in a hidden `%% %%` comment.
 - **Everything else** in the note (prose, other headings, nested bullets) is left alone. A bullet Zahlbar can't read is listed at the bottom of the pane, so you can fix it.
 
 ## The pane

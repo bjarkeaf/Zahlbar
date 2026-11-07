@@ -82,7 +82,7 @@ export function formatAmount(n: number, sep = " ", minus = "−"): string {
 export const formatRounded = (n: number, sep = "\u00a0"): string => formatAmount(Math.round(n), sep);
 
 /** Short axis label: 25000 -> "25k". */
-export const formatTick = (n: number): string => (n >= 1000 ? `${+(n / 1000).toFixed(1)}k` : String(n));
+export const formatTick = (n: number): string => (n >= 1000 ? `${+(n / 1000).toFixed(1)}k` : String(Math.round(n)));
 
 /** What you type in an amount field: "120k yearly", "42 000 every 2 years", or just "4000". */
 export function parseAmountInput(text: string): { amount: number; freq: Freq | undefined } | undefined {

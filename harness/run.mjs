@@ -400,6 +400,14 @@ const scenarios = {
     await sleep(100);
     expect((await listW()) === w0 && (await ev(`__em.savedWidth`)) === null, "double-click resets");
   },
+  async tinyPlan() {
+    await boot({ [PLAN]: "---\nzahlbar: 1\n---\n# Plan\n\n## Income\n- Salary: 0\n" });
+    const ticks = await ev(`[...document.querySelectorAll(".zahlbar-chart text.zahlbar-faint")].map(t => t.textContent)`);
+    expect(ticks.every((t) => /^(\d+(\.\d)?k?|\d+%|\d+ \/mo)$/.test(t)), `ticks are short, got ${JSON.stringify(ticks)}`);
+    await fill(`${row("Salary")} .zahlbar-amount`, "0.3");
+    const ticks2 = await ev(`[...document.querySelectorAll(".zahlbar-chart text.zahlbar-faint")].map(t => t.textContent)`);
+    expect(ticks2.every((t) => !/\d{4,}/.test(t.replace("k", ""))), `no float noise, got ${JSON.stringify(ticks2)}`);
+  },
   async badAndEmpty() {
     const bad = example.replace("- Food: 4 000", "- Food: 4 000\n- Gym: tbd");
     await boot({ [PLAN]: bad, "Notes.md": "# Notes\n" }, PLAN);

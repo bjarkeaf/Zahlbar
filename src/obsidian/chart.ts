@@ -37,8 +37,9 @@ function niceStep(max: number, px: number): number {
   const n = Math.max(3, Math.min(10, Math.floor(px / 70)));
   const raw = max / n;
   const p = Math.pow(10, Math.floor(Math.log10(raw)));
-  for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= raw) return m * p;
-  return 10 * p;
+  // whole kroner at least, a fractional axis makes no sense for money
+  for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= raw) return Math.max(1, m * p);
+  return Math.max(1, 10 * p);
 }
 
 function mergeSmall(segs: Seg[], k: number): Seg[] {
@@ -118,7 +119,8 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
   defs.append(dots(`${uid}-hp`, null, "var(--zahlbar-neutral-b)"));
   svg.append(defs);
 
-  for (let v = 0; v <= axisMax + 0.1; v += step) {
+  // index × step rather than repeated addition, which drifts (0.1 + 0.2 = 0.30000000000000004)
+  for (let i = 0, v = 0; v <= axisMax + step / 2; i++, v = i * step) {
     svg.append(s("line", { class: "zahlbar-grid", x1: axL, x2: brx + 4, y1: y(v), y2: y(v) }));
     svg.append(s("text", { class: "zahlbar-faint", x: axL - 6, y: y(v) + 3.5, "text-anchor": "end" }, formatTick(v)));
   }

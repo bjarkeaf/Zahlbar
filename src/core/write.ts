@@ -114,6 +114,9 @@ export function setMeta(text: string, key: string, value: string): string {
   return ["---", `${key}: ${value}`, "---", ...lines].join(plan.eol);
 }
 
+/** An Obsidian comment (hidden when reading) that tells anyone editing the raw note where the format is described. */
+export const FORMAT_POINTER = "%% Format: https://github.com/bjarkeaf/Zahlbar/blob/main/FORMAT.md %%";
+
 export function newPlanText(title: string, currency = "DKK"): string {
   return [
     "---",
@@ -121,6 +124,7 @@ export function newPlanText(title: string, currency = "DKK"): string {
     `currency: ${currency}`,
     "---",
     `# ${title}`,
+    FORMAT_POINTER,
     "",
     "## Income",
     "- Salary: 0",

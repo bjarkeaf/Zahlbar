@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatAmount, freqLabel, parseAmount, parseAmountInput, parseFreq, perYear } from "../src/core";
+import { formatAmount, formatTick, freqLabel, parseAmount, parseAmountInput, parseFreq, perYear } from "../src/core";
 
 describe("parseAmount", () => {
   it.each([
@@ -61,6 +61,15 @@ describe("frequencies", () => {
   });
 
   it.each(["3 times a year", "every 0 weeks", "sometimes", ""])("rejects %j", (t) => expect(parseFreq(t)).toBeUndefined());
+});
+
+describe("formatTick", () => {
+  it("is short and never shows float noise", () => {
+    expect(formatTick(25000)).toBe("25k");
+    expect(formatTick(2500)).toBe("2.5k");
+    expect(formatTick(0.30000000000000004)).toBe("0");
+    expect(formatTick(300)).toBe("300");
+  });
 });
 
 describe("parseAmountInput", () => {
