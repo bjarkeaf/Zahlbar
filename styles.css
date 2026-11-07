@@ -75,7 +75,8 @@ body.earmark-resizing, body.earmark-resizing * { cursor: col-resize !important; 
 .earmark-row:hover, .earmark-row.is-hl { background: var(--background-modifier-hover); }
 .earmark-row.is-editing { grid-template-columns: 14px 1fr 72px 142px 18px; }
 .earmark .earmark-sw { width: 14px; height: 14px; padding: 0; border-radius: 4px; border: 1px solid; cursor: pointer; }
-.earmark-sw.is-hatch { background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(0, 0, 0, 0.28) 3px 4.5px); }
+.earmark-sw.is-lines { background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(0, 0, 0, 0.28) 3px 4.5px); }
+.earmark-sw.is-dots { background-image: radial-gradient(circle, rgba(0, 0, 0, 0.35) 0.9px, transparent 1.2px); background-size: 4px 4px; background-position: 0 0; }
 .earmark-row.is-off .earmark-sw { background: transparent !important; background-image: none; border-style: dashed; }
 .earmark-row.is-off .earmark-name, .earmark-row.is-off .earmark-amount { text-decoration: line-through; color: var(--text-faint); }
 .earmark-row input { font: inherit; font-size: var(--font-ui-small); color: inherit; background: transparent; border: 1px solid transparent; border-radius: 5px; padding: 2px 5px; min-width: 0; height: auto; }

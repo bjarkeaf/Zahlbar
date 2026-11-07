@@ -7,6 +7,8 @@ import { s } from "./dom";
 /** Segments thinner than this (px) are merged with their thin neighbours into "N small items". */
 const MIN_LABEL = 22;
 
+export type Texture = "none" | "lines" | "dots";
+export const textureOf = (form: Entry["form"]): Texture => (form === "shares" ? "lines" : form === "pension" ? "dots" : "none");
 export type SegKind = "entry" | "small" | "shares" | "pension" | "left" | "short";
 interface Seg {
   kind: SegKind;
@@ -14,7 +16,8 @@ interface Seg {
   v: number;
   name: string;
   color: number;
-  hatch: boolean;
+  /** lines for shares, dots for pension, the same on both bars and in the list */
+  texture: Texture;
   group: string;
 }
 
@@ -61,22 +64,22 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
   if (W < 120 || Hbox < 120) return;
   const { totals: T, view, uid } = input;
   const visible = input.entries.filter((e) => !e.hidden);
-  const toSeg = (e: Entry): Seg => ({ kind: "entry", ids: [entryId(e)], v: shown(e, view), name: e.name, color: input.colorOf(e), hatch: e.form !== "cash", group: e.section });
+  const toSeg = (e: Entry): Seg => ({ kind: "entry", ids: [entryId(e)], v: shown(e, view), name: e.name, color: input.colorOf(e), texture: textureOf(e.form), group: e.section });
 
   let s1 = ordered(visible, "income", input.sort).map(toSeg);
   // shares and pension you keep are saving, so they sit in the Saving group. They're separate because
   // shares can be sold within months while pension is locked for decades.
   const kept: Seg[] = [];
-  if (T.keptShares > 0.5) kept.push({ kind: "shares", ids: ["shares"], v: T.keptShares, name: "Kept as shares", color: 0, hatch: true, group: "saving" });
-  if (T.keptPension > 0.5) kept.push({ kind: "pension", ids: ["pension"], v: T.keptPension, name: "Kept as pension", color: 0, hatch: true, group: "saving" });
+  if (T.keptShares > 0.5) kept.push({ kind: "shares", ids: ["shares"], v: T.keptShares, name: "Kept as shares", color: 0, texture: "lines", group: "saving" });
+  if (T.keptPension > 0.5) kept.push({ kind: "pension", ids: ["pension"], v: T.keptPension, name: "Kept as pension", color: 0, texture: "dots", group: "saving" });
   let s2 = [
     ...ordered(visible, "tax", input.sort).map(toSeg),
     ...ordered(visible, "saving", input.sort).map(toSeg),
     ...kept,
     ...ordered(visible, "living", input.sort).map(toSeg)
   ];
-  if (T.cashLeft > 0.5) s2.push({ kind: "left", ids: ["left"], v: T.cashLeft, name: "Cash left over", color: 0, hatch: false, group: "left" });
-  if (T.cashLeft < -0.5) s1.push({ kind: "short", ids: ["short"], v: -T.cashLeft, name: "Shortfall", color: 0, hatch: true, group: "short" });
+  if (T.cashLeft > 0.5) s2.push({ kind: "left", ids: ["left"], v: T.cashLeft, name: "Cash left over", color: 0, texture: "none", group: "left" });
+  if (T.cashLeft < -0.5) s1.push({ kind: "short", ids: ["short"], v: -T.cashLeft, name: "Shortfall", color: 0, texture: "lines", group: "short" });
   s1 = s1.filter((x) => x.v > 0);
   s2 = s2.filter((x) => x.v > 0);
 
@@ -103,10 +106,13 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
     s("pattern", { id, patternUnits: "userSpaceOnUse", width: 7, height: 7, patternTransform: "rotate(45)" },
       bg ? s("rect", { width: 7, height: 7, style: `fill:${bg}` }) : null,
       s("line", { x1: 1, y1: 0, x2: 1, y2: 7, style: `stroke:${line}`, "stroke-width": 1.6, opacity }));
-  for (let i = 0; i < 10; i++) defs.append(hatch(`${uid}-h${i}`, fillVar(i), borderVar(i)));
+  const dots = (id: string, bg: string | null, dot: string) =>
+    s("pattern", { id, patternUnits: "userSpaceOnUse", width: 6, height: 6 },
+      bg ? s("rect", { width: 6, height: 6, style: `fill:${bg}` }) : null,
+      s("circle", { cx: 3, cy: 3, r: 1.1, style: `fill:${dot}` }));
+  for (let i = 0; i < 10; i++) defs.append(hatch(`${uid}-h${i}`, fillVar(i), borderVar(i)), dots(`${uid}-d${i}`, fillVar(i), borderVar(i)));
   defs.append(hatch(`${uid}-hn`, null, "var(--earmark-neutral-b)", 1), hatch(`${uid}-he`, null, "var(--text-error)", 0.55));
-  defs.append(s("pattern", { id: `${uid}-hp`, patternUnits: "userSpaceOnUse", width: 6, height: 6 },
-    s("circle", { cx: 3, cy: 3, r: 1.1, style: "fill:var(--earmark-neutral-b)" })));
+  defs.append(dots(`${uid}-hp`, null, "var(--earmark-neutral-b)"));
   svg.append(defs);
 
   for (let v = 0; v <= axisMax + 0.1; v += step) {
@@ -139,13 +145,16 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
       else if (sg.kind === "left") [fill, stroke, dash] = ["transparent", "var(--earmark-neutral-b)", "4 3"];
       else if (sg.kind === "short") [fill, stroke, dash] = [`url(#${uid}-he)`, "var(--text-error)", "4 3"];
       else if (sg.kind === "small") [fill, stroke] = ["var(--earmark-neutral)", "var(--earmark-neutral-b)"];
-      else [fill, stroke] = [sg.hatch ? `url(#${uid}-h${sg.color})` : fillVar(sg.color), borderVar(sg.color)];
+      else {
+        const pattern = sg.texture === "lines" ? `url(#${uid}-h${sg.color})` : sg.texture === "dots" ? `url(#${uid}-d${sg.color})` : fillVar(sg.color);
+        [fill, stroke] = [pattern, borderVar(sg.color)];
+      }
       const g = s("g", { class: "earmark-seg", "data-ids": sg.ids.join(" "), "data-kind": sg.kind });
       g.append(s("rect", { x, y: gy, width: bw, height: gh, rx: r, style: `fill:${fill};stroke:${stroke}`, "stroke-dasharray": dash }));
       const cx = x + bw / 2;
       const pct = T.income > 0 ? Math.round((sg.v / T.income) * 100) : 0;
       const err = sg.kind === "short" ? "earmark-error" : "";
-      const plate = sg.hatch || sg.kind === "short";
+      const plate = sg.texture !== "none";
       if (gh >= 50 && fits(sg.name)) {
         if (plate) g.append(s("rect", { class: "earmark-plate", x: cx - 50, y: gy + gh / 2 - 24, width: 100, height: 48, rx: 4 }));
         g.append(s("text", { x: cx, y: gy + gh / 2 - 8, "text-anchor": "middle", class: err }, sg.name));

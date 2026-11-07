@@ -91,7 +91,7 @@ function row(e: Entry, host: ListHost): HTMLElement {
   const r = h("div", { class: `earmark-row${e.hidden ? " is-off" : ""}${host.hoverId === id ? " is-hl" : ""}`, "data-id": id, "data-sec": e.section });
 
   const sw = h("button", {
-    class: `earmark-sw${e.form !== "cash" ? " is-hatch" : ""}`,
+    class: `earmark-sw${e.form === "shares" ? " is-lines" : e.form === "pension" ? " is-dots" : ""}`,
     style: `background-color:${fillVar(c)};border-color:${borderVar(c)}`,
     title: "Click: colour and type. Double-click: hide or show",
     "aria-label": `${e.name}: colour, type, hide`
@@ -320,7 +320,7 @@ function openPopover(anchor: HTMLElement, e: Entry, host: ListHost): void {
       seg.append(b);
     }
     el.append(seg, h("div", { class: "earmark-pop-note" },
-      e.form === "cash" ? "Solid: spendable cash" : e.section === "tax" ? "Hatched: paid by selling shares" : "Hatched: not spendable cash"));
+      e.form === "cash" ? "Solid: spendable cash" : e.section === "tax" ? "Lines: paid by selling shares" : e.form === "pension" ? "Dots: pension, locked for decades" : "Lines: shares, sellable within months"));
   }
 
   const hide = h("button", { class: "earmark-pop-item" }, h("span", {}, e.hidden ? "Show" : "Hide"), h("span", { class: "earmark-pop-hint" }, "double-click"));

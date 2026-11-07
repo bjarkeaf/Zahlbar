@@ -40,7 +40,7 @@ currency: DKK
   - Presets: `weekly`, `quarterly`, `half-yearly`, `yearly`.
   - Anything else: `every N days|weeks|months|years`.
 - **Attributes:**
-  - `{shares}` or `{pension}` on income means money you can't spend. It's drawn hatched.
+  - `{shares}` or `{pension}` on income means money you can't spend. Shares are drawn with diagonal lines and pension with dots, the same on both bars and in the list.
   - `{shares}` on a tax line means the tax is paid by selling shares (sell-to-cover).
   - A colour name like `{rose}` picks the colour.
 - **Hidden entries:** strike through (`~~ ~~`) to hide an entry. It stays in the note but is left out of every total.
@@ -62,7 +62,7 @@ Run **Earmark: Open plan** or click the piggy bank in the ribbon.
 - Thin segments merge into "N small items". Hover to see what's inside.
 - **Outgoings** stacks tax, saving and living, then any spare cash ("Left over", outlined).
 - Shares and pension you receive and keep count as saving. They're shown separately, because shares can be sold within months and pension is locked for decades:
-  - **Kept as shares** is hatched, after any tax paid by selling shares.
+  - **Kept as shares** has lines, and is what's left after any tax paid by selling shares.
   - **Kept as pension** is dotted.
 - If cash runs short, a red "short" block sits on top of Income.
 
