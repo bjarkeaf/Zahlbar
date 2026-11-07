@@ -103,10 +103,10 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
   const bw = Math.max(80, Math.min(180, W / 4.2));
   const gap = Math.max(32, Math.min(140, W * 0.13));
   // lay out from the axis labels to the group labels, then centre that block in the available width
-  const content = 40 + 16 + bw + gap + bw + 8 + 100;
+  const content = 40 + 16 + bw + gap + bw + 8 + 120;
   const axL = 40 + Math.max(0, (W - content) / 2);
   const b1x = axL + 16, b2x = b1x + bw + gap, brx = b2x + bw + 8;
-  const refEnd = Math.min(W - 40, brx + 70);
+  const refEnd = Math.min(W - 40, brx + 100);
   const T1 = s1.reduce((a, x) => a + x.v, 0), T2 = s2.reduce((a, x) => a + x.v, 0);
   const M = Math.max(T1, T2, 1);
   // in percent mode the steps are tidy percentages of income, otherwise tidy amounts
@@ -225,7 +225,8 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
     svg.append(s("rect", { class: "zahlbar-grouphit", x: b2x + bw + 2, y: y0 - 1, width: Math.max(0, refEnd - (b2x + bw + 2)), height: y1 - y0 + 2, "data-ids": g.ids.join(" ") }));
     svg.append(s("path", { class: "zahlbar-bracket", d: `M${brx} ${y0} h4 V${y1} h-4` }));
     svg.append(s("text", { x: brx + 10, y: (y0 + y1) / 2 - 2, class: "zahlbar-bold zahlbar-small" }, GROUP_NAMES[g.key] ?? g.key));
-    svg.append(s("text", { x: brx + 10, y: (y0 + y1) / 2 + 13, class: "zahlbar-faint" }, `${T.income > 0 ? Math.round((g.v / T.income) * 100) : 0}%`));
+    const gp = `${T.income > 0 ? Math.round((g.v / T.income) * 100) : 0}%`;
+    svg.append(s("text", { x: brx + 10, y: (y0 + y1) / 2 + 13, class: "zahlbar-faint" }, pctMode ? `${gp} · ${formatRounded(g.v)}` : `${formatRounded(g.v)} · ${gp}`));
   }
   const out: Record<string, string[]> = {};
   for (const g of groups) out[g.key] = g.ids;

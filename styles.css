@@ -130,9 +130,8 @@ body.zahlbar-grabbing, body.zahlbar-grabbing * { cursor: grabbing !important; us
 .zahlbar-chart .zahlbar-seg { cursor: pointer; transition: opacity 0.12s; }
 .zahlbar-chart.is-dimming .zahlbar-seg:not(.is-hl) { opacity: 0.35; }
 /* one quiet line, label then value, like Obsidian's properties. Bottom padding keeps it clear of the status bar. */
-.zahlbar-metrics { display: flex; flex-wrap: wrap; justify-content: center; row-gap: 4px; padding: 10px 22px 34px; font-size: calc(var(--font-ui-small) * 1.25); }
-.zahlbar-metric { display: flex; align-items: baseline; gap: 6px; padding: 3px 14px; border-left: 1px solid var(--background-modifier-border); border-radius: 4px; cursor: default; }
-.zahlbar-metric:first-child { border-left: 0; }
+.zahlbar-metrics { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 22px; padding: 10px 22px 34px; font-size: calc(var(--font-ui-small) * 1.25); }
+.zahlbar-metric { display: flex; align-items: baseline; gap: 6px; padding: 3px 6px; border-radius: 4px; cursor: default; }
 .zahlbar-metric:hover { background: var(--background-modifier-hover); }
 .zahlbar-metric-label, .zahlbar-metric-unit { color: var(--text-muted); }
 .zahlbar-metric b { font-weight: 600; color: var(--text-normal); }

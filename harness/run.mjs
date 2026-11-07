@@ -152,6 +152,10 @@ const scenarios = {
     expect((await lit()) === "Income tax,Tax on vest", `hovering Tax rate lights tax, got ${await lit()}`);
     await hover(".zahlbar-metric:nth-child(3)");
     await sleep(60);
+    expect((await lit()).startsWith("Rent,Food"), `hovering Living lights living, got ${await lit()}`);
+    expect((await ev(`[...document.querySelectorAll(".zahlbar-metric")].map(m => m.textContent).join(" | ")`)) === "Cash left over3\u00a0050DKK/mo | Tax22\u00a000034.1% | Living22\u00a045034.8% | Saved20\u00a005031.1%", `metrics with amounts, got ${await ev(`[...document.querySelectorAll(".zahlbar-metric")].map(m => m.textContent).join(" | ")`)}`);
+    await hover(".zahlbar-metric:nth-child(4)");
+    await sleep(60);
     expect((await lit()).startsWith("Own pension,Stock purchase plan"), `hovering Saved lights saving, got ${await lit()}`);
     expect(await ev(`!!document.querySelector('.zahlbar-seg.is-hl[data-kind="left"]')`), "and cash left over");
     await mouse("mouseMoved", { x: 5, y: 5 }, { button: "none" });
