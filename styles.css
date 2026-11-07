@@ -172,6 +172,11 @@ body.zahlbar-grabbing, body.zahlbar-grabbing * { cursor: grabbing !important; us
 .zahlbar-pop.zahlbar-currency { width: 160px; }
 .zahlbar-currency .zahlbar-pop-label { margin-top: 0; }
 .zahlbar-currency-input { width: 100%; }
+.zahlbar-pop.zahlbar-sale { width: 200px; }
+.zahlbar-sale .zahlbar-pop-label { margin-top: 0; }
+.zahlbar-sale-amount { width: 100%; }
+.zahlbar-sale-freq { margin-top: 6px; }
+.zahlbar-sale .is-invalid { border-color: var(--text-error); }
 
 /* breakdown of a computed segment */
 /* the breakdown carries its own box, so hovering (inside the tooltip) and frozen (as a popover) look identical */

@@ -311,8 +311,9 @@ const scenarios = {
     await hover(".zahlbar-crow");
     await click(".zahlbar-crow .zahlbar-sell");
     await sleep(60);
-    expect(await ev(`document.activeElement?.classList.contains("zahlbar-currency-input")`), "sell field focused");
-    await type("6000 quarterly");
+    expect(await ev(`document.activeElement?.classList.contains("zahlbar-sale-amount")`), "amount field focused");
+    await type("6000");
+    await ev(`(() => { const n = document.querySelector(".zahlbar-sale .zahlbar-freqn"); n.value = "3"; })()`);
     await key("Enter");
     await sleep(150);
     expect((await text()).includes("- Sell shares: -6 000 quarterly {shares}\n"), "sale line added");

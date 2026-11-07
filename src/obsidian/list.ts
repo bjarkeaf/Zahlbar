@@ -174,20 +174,28 @@ function receivedRow(form: "shares" | "pension", value: number, host: ListHost):
   return r;
 }
 
-/** Shortcut for selling: one field, an amount with an optional frequency, e.g. "15000 quarterly". */
+/** Shortcut for selling: an amount, and how often as "every [N] [unit]", like the custom frequency editor. */
 function openSale(anchor: HTMLElement, form: "shares" | "pension", host: ListHost): void {
-  const input = h("input", { class: "zahlbar-currency-input", placeholder: form === "shares" ? "e.g. 15000 quarterly" : "e.g. 2000 monthly", spellcheck: "false" });
-  const el = h("div", { class: "zahlbar-pop zahlbar-currency" }, h("div", { class: "zahlbar-pop-label" }, form === "shares" ? "Sell shares" : "Take out pension"), input);
-  input.addEventListener("keydown", (ev) => {
+  const amount = h("input", { class: "zahlbar-sale-amount", placeholder: "Amount", inputmode: "decimal", spellcheck: "false", "aria-label": "Amount" });
+  const n = h("input", { class: "zahlbar-freqn", type: "number", min: 1, step: 1, value: 1, "aria-label": "Every how many" });
+  const unit = h("select", { class: "zahlbar-frequ", "aria-label": "Unit" });
+  for (const u of UNITS) unit.append(h("option", { value: u, selected: u === "month" }, `${u}s`));
+  const el = h("div", { class: "zahlbar-pop zahlbar-sale" },
+    h("div", { class: "zahlbar-pop-label" }, form === "shares" ? "Sell shares" : "Take out pension"),
+    amount, h("div", { class: "zahlbar-custom zahlbar-sale-freq" }, "every ", n, unit));
+  el.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape") return closePopover();
     if (ev.key !== "Enter") return;
-    const p = parseAmountInput(input.value);
-    if (!p || p.amount === 0) return input.classList.add("is-invalid");
+    ev.preventDefault();
+    const a = parseAmountInput(amount.value);
+    const count = Math.round(Number(n.value));
+    if (!a || a.amount === 0) return amount.classList.add("is-invalid");
+    if (!(count >= 1)) return n.classList.add("is-invalid");
     closePopover();
-    void host.addSale(form, Math.abs(p.amount), p.freq);
+    void host.addSale(form, Math.abs(a.amount), { n: count, unit: unit.value as Freq["unit"] });
   });
   mountPopover(el, anchor.getBoundingClientRect());
-  input.focus();
+  amount.focus();
 }
 
 /** Enter commits and moves on, Esc reverts, leaving the field commits. */
