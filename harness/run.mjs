@@ -276,6 +276,37 @@ const scenarios = {
     expect(await ev(`[...document.querySelectorAll(".notice")].some(n => n.textContent.includes("changed"))`), "notice about reload");
     expect((await ev(`document.querySelector('${row("Rent")} .earmark-amount').value`)) === "7 100", "reloaded");
   },
+  async resize() {
+    await boot();
+    const listW = () => ev(`Math.round(document.querySelector(".earmark-list").getBoundingClientRect().width)`);
+    const nameW = () => ev(`Math.round(document.querySelector(".earmark-namecell").getBoundingClientRect().width)`);
+    const w0 = await listW(), n0 = await nameW();
+    const d = await point(".earmark-divider");
+    await mouse("mouseMoved", d, { button: "none" });
+    await mouse("mousePressed", d, { clickCount: 1, buttons: 1 });
+    for (let i = 1; i <= 5; i++) await mouse("mouseMoved", { x: d.x + i * 30, y: d.y }, { buttons: 1 });
+    await mouse("mouseReleased", { x: d.x + 150, y: d.y }, { clickCount: 1 });
+    await sleep(100);
+    expect((await listW()) === w0 + 150, `list widened by 150, ${w0} -> ${await listW()}`);
+    expect((await nameW()) === n0 + 150, "name column gets the extra space");
+    expect((await ev(`__em.savedWidth`)) === w0 + 150, "width saved");
+    const d1 = await point(".earmark-divider");
+    await mouse("mouseMoved", d1, { button: "none" });
+    await mouse("mousePressed", d1, { clickCount: 1, buttons: 1 });
+    await mouse("mouseMoved", { x: d1.x - 300, y: d1.y }, { buttons: 1 });
+    await mouse("mouseReleased", { x: d1.x - 300, y: d1.y }, { clickCount: 1 });
+    await sleep(100);
+    expect((await listW()) === w0, "can't go below the default width");
+    const d2 = await point(".earmark-divider");
+    await mouse("mousePressed", d2, { clickCount: 1, buttons: 1 });
+    await mouse("mouseMoved", { x: 1290, y: d2.y }, { buttons: 1 });
+    await mouse("mouseReleased", { x: 1290, y: d2.y }, { clickCount: 1 });
+    await sleep(150);
+    expect((await ev(`Math.round(document.querySelector(".earmark-chartcol").getBoundingClientRect().width)`)) >= 360, "chart keeps at least 360px");
+    await dblclick(".earmark-divider");
+    await sleep(100);
+    expect((await listW()) === w0 && (await ev(`__em.savedWidth`)) === null, "double-click resets");
+  },
   async badAndEmpty() {
     const bad = example.replace("- Food: 4 000", "- Food: 4 000\n- Gym: tbd");
     await boot({ [PLAN]: bad, "Notes.md": "# Notes\n" }, PLAN);

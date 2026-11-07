@@ -5,6 +5,7 @@ import { EarmarkView, ICON, VIEW_TYPE } from "./view";
 
 interface Prefs {
   lastFile?: string;
+  listWidth?: number;
 }
 
 export default class EarmarkPlugin extends Plugin implements ViewHost {
@@ -30,6 +31,16 @@ export default class EarmarkPlugin extends Plugin implements ViewHost {
 
   planFiles(): TFile[] {
     return this.app.vault.getMarkdownFiles().filter((f) => this.isPlan(f)).sort((a, b) => a.basename.localeCompare(b.basename));
+  }
+
+  get listWidth(): number | undefined {
+    return this.prefs.listWidth;
+  }
+
+  saveListWidth(px: number | undefined): void {
+    if (px === undefined) delete this.prefs.listWidth;
+    else this.prefs.listWidth = px;
+    void this.saveData(this.prefs);
   }
 
   rememberFile(path: string): void {

@@ -58,7 +58,12 @@ const vault = {
     const host = {
       planFiles: () => [...files.keys()].filter((p) => parse(files.get(p)!).flagged).map(fileFor),
       createPlan: async () => vault.create("Plan.md", "---\nearmark: 1\n---\n# Plan\n"),
-      rememberFile: () => {}
+      rememberFile: () => {},
+      listWidth: undefined as number | undefined,
+      saveListWidth(px: number | undefined) {
+        this.listWidth = px;
+        (window as any).__em.savedWidth = px ?? null;
+      }
     };
     const view = new EarmarkView({} as any, host as any);
     document.getElementById("pane")!.append(view.contentEl);

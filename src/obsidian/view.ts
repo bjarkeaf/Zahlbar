@@ -19,6 +19,9 @@ export interface ViewHost {
   planFiles(): TFile[];
   createPlan(folder: string): Promise<TFile>;
   rememberFile(path: string): void;
+  /** list width in px chosen with the divider, shared by all panes */
+  listWidth: number | undefined;
+  saveListWidth(px: number | undefined): void;
 }
 
 const ref = (e: Entry): EntryRef => ({ line: e.line, raw: e.raw });
@@ -247,7 +250,14 @@ export class EarmarkView extends ItemView implements ListHost {
     const metrics = h("div", { class: "earmark-metrics" });
     const tooltip = h("div", { class: "earmark-tooltip" });
     const chartCol = h("div", { class: "earmark-chartcol" }, chartBox, metrics, tooltip);
-    const body = h("div", { class: "earmark-body" }, list, chartCol);
+    const divider = h("div", { class: "earmark-divider", role: "separator", "aria-orientation": "vertical", title: "Drag to resize. Double-click to reset." });
+    const body = h("div", { class: "earmark-body" }, list, divider, chartCol);
+    this.setListWidth(this.host.listWidth);
+    this.registerDomEvent(divider, "pointerdown", (ev) => this.startResize(ev, divider));
+    this.registerDomEvent(divider, "dblclick", () => {
+      this.setListWidth(undefined);
+      this.host.saveListWidth(undefined);
+    });
     const empty = h("div", { class: "earmark-empty" });
     root.append(body, empty);
     this.ui = { pick, viewCtl, sortCtl, tip, body, empty, list, chartBox, svg, metrics, tooltip };
@@ -277,6 +287,40 @@ export class EarmarkView extends ItemView implements ListHost {
         input.select();
       }
     });
+  }
+
+  private setListWidth(px: number | undefined): void {
+    if (px === undefined) this.contentEl.style.removeProperty("--earmark-list-w");
+    else this.contentEl.style.setProperty("--earmark-list-w", `${Math.round(px)}px`);
+    this.ui?.list.querySelectorAll<HTMLInputElement>(".earmark-name").forEach((i) => i.dispatchEvent(new Event("input")));
+  }
+
+  /** Drags the divider between list and chart. The list can't go below its default width, and the chart keeps 360px. */
+  private startResize(ev: PointerEvent, divider: HTMLElement): void {
+    if (ev.button !== 0) return;
+    ev.preventDefault();
+    const list = this.ui.list;
+    const start = ev.clientX, from = list.getBoundingClientRect().width;
+    const min = parseFloat(getComputedStyle(list).minWidth) || 460;
+    const max = () => Math.max(min, this.ui.body.getBoundingClientRect().width - 360 - divider.offsetWidth);
+    let width = from;
+    divider.classList.add("is-active");
+    document.body.classList.add("earmark-resizing");
+    const move = (m: PointerEvent) => {
+      width = Math.max(min, Math.min(max(), from + m.clientX - start));
+      this.setListWidth(width);
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+      divider.classList.remove("is-active");
+      document.body.classList.remove("earmark-resizing");
+      if (width !== from) this.host.saveListWidth(width <= min ? undefined : Math.round(width));
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
   }
 
   private segmented(options: Array<[string, string]>, onPick: (v: string) => void): HTMLElement {

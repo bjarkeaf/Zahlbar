@@ -72,9 +72,11 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
   s2 = s2.filter((x) => x.v > 0);
 
   const top = 22, bottom = Hbox - 40, H = bottom - top;
-  const axL = 40;
   const bw = Math.max(80, Math.min(170, W / 4.6));
   const gap = Math.max(32, Math.min(140, W * 0.13));
+  // lay out from the axis labels to the % labels, then centre that block in the available width
+  const content = 40 + 16 + bw + gap + bw + 8 + 110;
+  const axL = 40 + Math.max(0, (W - content) / 2);
   const b1x = axL + 16, b2x = b1x + bw + gap, brx = b2x + bw + 8;
   const pctX = Math.min(W, brx + 110);
   const T1 = s1.reduce((a, x) => a + x.v, 0), T2 = s2.reduce((a, x) => a + x.v, 0);

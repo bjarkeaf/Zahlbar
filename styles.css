@@ -51,14 +51,19 @@
 
 /* layout */
 .earmark-body { flex: 1; min-height: 0; display: flex; }
-.earmark-list { width: 460px; flex: none; padding: 6px 14px 16px; border-right: 1px solid var(--background-modifier-border); overflow-y: auto; }
+.earmark-list { width: var(--earmark-list-w, 460px); min-width: 460px; max-width: calc(100% - 366px); flex: none; padding: 6px 14px 16px; border-right: 1px solid var(--background-modifier-border); overflow-y: auto; }
+.earmark-divider { flex: none; width: 6px; margin-left: -3px; margin-right: -3px; z-index: 3; cursor: col-resize; position: relative; touch-action: none; }
+.earmark-divider::after { content: ""; position: absolute; top: 0; bottom: 0; left: 2px; width: 2px; background: transparent; transition: background 0.12s; }
+.earmark-divider:hover::after, .earmark-divider.is-active::after { background: var(--interactive-accent); }
+body.earmark-resizing, body.earmark-resizing * { cursor: col-resize !important; user-select: none; }
 .earmark-chartcol { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; }
 .earmark-chartbox { flex: 1; min-height: 0; margin: 12px 18px 8px; }
 .earmark-chart { width: 100%; height: 100%; display: block; overflow: visible; }
 @container (max-width: 860px) {
   .earmark-body { flex-direction: column; overflow-y: auto; }
   .earmark-chartcol { flex: none; height: 65vh; }
-  .earmark-list { width: 100%; border-right: 0; border-top: 1px solid var(--background-modifier-border); overflow: visible; order: 2; }
+  .earmark-divider { display: none; }
+  .earmark-list { width: 100%; min-width: 0; max-width: none; border-right: 0; border-top: 1px solid var(--background-modifier-border); overflow: visible; order: 2; }
 }
 .earmark-empty { padding: 32px; color: var(--text-muted); display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 
@@ -121,7 +126,7 @@ body.earmark-grabbing, body.earmark-grabbing * { cursor: grabbing !important; us
 .earmark-chart .earmark-plate { fill: var(--background-primary); opacity: 0.8; }
 .earmark-chart .earmark-seg { cursor: pointer; transition: opacity 0.12s; }
 .earmark-chart.is-dimming .earmark-seg:not(.is-hl) { opacity: 0.35; }
-.earmark-metrics { display: flex; flex-wrap: wrap; gap: 6px 36px; padding: 10px 22px 12px; }
+.earmark-metrics { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 36px; padding: 10px 22px 12px; }
 .earmark-metric b { font-size: 18px; font-weight: 600; margin-right: 6px; }
 .earmark-metric span { font-size: 11.5px; color: var(--text-muted); }
 .earmark-metric.is-neg b { color: var(--text-error); }
