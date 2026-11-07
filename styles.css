@@ -156,8 +156,11 @@ body.earmark-grabbing, body.earmark-grabbing * { cursor: grabbing !important; us
 .earmark-undo { margin-left: 8px; }
 
 /* breakdown of a computed segment */
-.earmark-breakdown { width: 260px; white-space: normal; }
-.earmark-tooltip:has(.earmark-breakdown) { padding: 8px; }
+/* the breakdown carries its own box, so hovering (inside the tooltip) and frozen (as a popover) look identical */
+.earmark-breakdown, .earmark-pop.earmark-breakdown { box-sizing: border-box; width: 260px; padding: 8px; white-space: normal;
+  background: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 7px; box-shadow: var(--shadow-s);
+  font-size: 12.5px; line-height: 1.45; font-family: var(--font-interface); color: var(--text-normal); }
+.earmark-tooltip:has(.earmark-breakdown) { padding: 0; border: 0; background: none; box-shadow: none; }
 .earmark-bd-title { font-weight: 600; font-size: 13px; }
 .earmark-breakdown .earmark-bd-title + .earmark-bd-row { margin-top: 6px; }
 .earmark-bd-row { font-size: 12.5px; font-variant-numeric: tabular-nums; }

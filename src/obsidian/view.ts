@@ -359,7 +359,7 @@ export class EarmarkView extends ItemView implements ListHost {
     this.pinned = ids;
     this.applyHover();
     const r = at ?? this.ui.chartBox.getBoundingClientRect();
-    mountPopover(el, { left: r.left, top: r.top, bottom: r.top - 7 }, () => {
+    mountPopover(el, { left: r.left, top: r.top, bottom: r.top - 6 }, () => {
       this.frozen = false;
       this.pinned = null;
       this.applyHover();

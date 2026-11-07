@@ -229,9 +229,13 @@ const scenarios = {
     const hovered = await rowsIn(".earmark-tooltip");
     expect(JSON.stringify(hovered) === JSON.stringify(["+Stock vest10\u00a0000", "−Tax on vest4\u00a0000", "=Kept as shares6\u00a0000 /mo"]), `hover shows breakdown, got ${JSON.stringify(hovered)}`);
     expect(await ev(`(() => { const id = __view.plan.entries.find((e) => e.name === "Stock vest").line; return document.querySelector('.earmark-seg[data-ids="' + id + '"]')?.classList.contains("is-hl"); })()`), "source lit up on hover");
+    const box = (sel) => ev(`(() => { const b = document.querySelector("${sel}"); const r = b.getBoundingClientRect(); const rows = [...b.querySelectorAll(".earmark-bd-row")].map(x => Math.round(x.getBoundingClientRect().top - r.top)); return { x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height), rows }; })()`);
+    const before = await box(".earmark-tooltip .earmark-breakdown");
     await click(`.earmark-seg[data-kind="shares"]`);
     await sleep(80);
     expect(await ev(`!!document.querySelector(".earmark-pop.earmark-breakdown")`), "click freezes it");
+    const after = await box(".earmark-pop.earmark-breakdown");
+    expect(JSON.stringify(before) === JSON.stringify(after), `frozen looks exactly like hover: ${JSON.stringify(before)} vs ${JSON.stringify(after)}`);
     await mouse("mouseMoved", { x: 5, y: 400 }, { button: "none" });
     await sleep(50);
     expect(await ev(`!!document.querySelector(".earmark-pop.earmark-breakdown")`), "stays open when the pointer leaves");
