@@ -11,7 +11,7 @@ The name is German for payable, and also reads as *Zahl* (number) plus bar.
 
 ## Install
 
-Zahlbar isn't in the community plugin list yet. Download `main.js`, `manifest.json` and `styles.css` from the latest release into `<vault>/.obsidian/plugins/zahlbar/` and enable it under Community plugins. Or build it from source, see below.
+Zahlbar isn't in the community plugin list yet. Download `main.js`, `manifest.json` and `styles.css` from the latest release into `<vault>/.obsidian/plugins/zahlbar/` and enable it under Community plugins. To build it yourself, run `npm install && npm run build`.
 
 ## Try it
 
@@ -44,18 +44,6 @@ currency: EUR
 ```
 
 Amounts are per occurrence and monthly unless you say otherwise. `{shares}` and `{pension}` mark money you can't spend, and on a tax line `{shares}` means it's paid by selling shares. A negative Saving line takes money out. Strike a line through to leave it out of the totals. [FORMAT.md](FORMAT.md) has the full syntax and how the totals are calculated.
-
-## Development
-
-```bash
-npm install
-npm run build
-npm test
-npm run harness
-npm run install:vault -- "/path/to/vault"
-```
-
-`src/core` parses, writes and computes plans without touching Obsidian. The harness runs the real pane in headless Chromium against a stubbed Obsidian.
 
 ## Licence
 

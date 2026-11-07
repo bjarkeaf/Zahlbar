@@ -142,8 +142,9 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
     svg.append(s("line", { class: "zahlbar-grid", x1: axL, x2: brx + 4, y1: y(v), y2: y(v) }));
     svg.append(s("text", { class: "zahlbar-faint", x: axL - 6, y: y(v) + 4, "text-anchor": "end" }, pctMode ? `${Math.round(i * stepP)}%` : formatTick(v)));
   }
-  if (T.income > 0) {
-    // where income ends: everything above this line on Outgoings is more than comes in
+  // where income ends. Only drawn when something sits on top of income (a shortfall, or shares you already held),
+  // otherwise it would just repeat the top of the Income bar.
+  if (T.income > 0 && T1 > T.income + 0.5) {
     svg.append(s("line", { class: "zahlbar-ref", x1: axL, x2: refEnd, y1: y(T.income), y2: y(T.income) }));
     svg.append(s("text", { class: "zahlbar-bold zahlbar-small", x: refEnd + 4, y: y(T.income) + 4 }, "100%"));
   }
