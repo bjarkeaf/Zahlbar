@@ -52,7 +52,7 @@ export function renderList(root: HTMLElement, host: ListHost): void {
     const list = ordered(plan.entries, sec, host.sort);
     const total = list.filter((e) => !e.hidden).reduce((a, e) => a + shown(e, view), 0);
     const box = h("div", { class: "zahlbar-sec" },
-      h("div", { class: "zahlbar-sec-head" }, h("span", {}, SECTION_TITLES[sec]), h("span", {}, `${formatRounded(total)} ${per(view)}`)));
+      h("div", { class: "zahlbar-sec-head" }, h("span", {}, SECTION_TITLES[sec]), h("span", {}, `${formatRounded(total)} ${view === "month" ? "per month" : "per year"}`)));
     for (const e of list) box.append(row(e, host));
     const add = h("button", { class: "zahlbar-add" }, "+ Add");
     add.addEventListener("click", () => void host.add(sec));
