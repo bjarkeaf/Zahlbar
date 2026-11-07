@@ -451,11 +451,39 @@ export class ZahlbarView extends ItemView implements ListHost {
         await this.openFile(f);
       })
     );
+    if (this.file && this.plan.flagged) {
+      const current = this.plan.currency;
+      menu.addItem((i) => i.setTitle(current ? `Currency: ${current}` : "Set currency").setIcon("coins").onClick(() => this.editCurrency()));
+    }
     if (this.file) {
       const file = this.file;
       menu.addItem((i) => i.setTitle("Open note").setIcon("file-text").onClick(() => void this.app.workspace.getLeaf("tab").openFile(file)));
     }
     menu.showAtMouseEvent(ev);
+  }
+
+  /** A small field by the scale toggle. Enter saves the currency to the note's frontmatter, empty removes it. */
+  private editCurrency(): void {
+    const input = h("input", { class: "zahlbar-currency-input", value: this.plan.currency ?? "", placeholder: "DKK, EUR, kr", spellcheck: "false", "aria-label": "Currency" });
+    const el = h("div", { class: "zahlbar-pop zahlbar-currency" }, h("div", { class: "zahlbar-pop-label" }, "Currency"), input);
+    let done = false;
+    const save = () => {
+      if (done) return;
+      done = true;
+      const v = input.value.trim();
+      closePopover();
+      if (v !== (this.plan.currency ?? "")) void this.write((t) => setMeta(t, "currency", v));
+    };
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") save();
+      else if (e.key === "Escape") {
+        done = true;
+        closePopover();
+      }
+    });
+    mountPopover(el, this.ui.scaleCtl.getBoundingClientRect());
+    input.focus();
+    input.select();
   }
 
   /* ---------- rendering ---------- */

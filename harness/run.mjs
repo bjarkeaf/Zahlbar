@@ -402,6 +402,21 @@ const scenarios = {
     await sleep(150);
     expect((await text()).includes("scale: amount\n"), "back to amounts");
   },
+  async currency() {
+    await boot();
+    await click(".zahlbar-pick");
+    await sleep(50);
+    expect((await ev(`[...document.querySelectorAll(".menu-item")].map(i => i.textContent).includes("Currency: DKK")`)), "menu shows the currency");
+    await ev(`[...document.querySelectorAll(".menu-item")].find(i => i.textContent === "Currency: DKK").click()`);
+    await sleep(50);
+    expect((await ev(`document.activeElement?.classList.contains("zahlbar-currency-input")`)), "currency field focused");
+    await ev(`document.activeElement.select()`);
+    await type("EUR");
+    await key("Enter");
+    await sleep(150);
+    expect((await text()).includes("currency: EUR\n"), "currency saved in frontmatter");
+    expect((await ev(`document.querySelector('.zahlbar-head .zahlbar-segctl:last-of-type button[data-v="amount"]').textContent`)) === "EUR", "toggle shows the new currency");
+  },
   async external() {
     await boot();
     await ev(`__em.external(${JSON.stringify(PLAN)}, __em.text(${JSON.stringify(PLAN)}).replace("- Rent: 9 500", "- Rent: 7 000"))`);

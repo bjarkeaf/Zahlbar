@@ -9,7 +9,7 @@ A note is a plan when its frontmatter has a `zahlbar` key. The value is the form
 ```yaml
 ---
 zahlbar: 1
-currency: DKK      # optional, shown with totals (e.g. "64 500 DKK/mo")
+currency: DKK      # optional, shown with totals (e.g. "64 500 DKK/mo"). Also set from the plan menu in the pane
 view: month        # optional: month | year
 sort: manual       # optional: manual | amount
 scale: amount      # optional: amount | percent

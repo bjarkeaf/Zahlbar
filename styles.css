@@ -161,6 +161,9 @@ body.zahlbar-grabbing, body.zahlbar-grabbing * { cursor: grabbing !important; us
 .zahlbar-pop .zahlbar-pop-item:hover { background: var(--background-modifier-hover); }
 .zahlbar-pop-hint { font-size: 11px; color: var(--text-faint); }
 .zahlbar-undo { margin-left: 8px; }
+.zahlbar-pop.zahlbar-currency { width: 160px; }
+.zahlbar-currency .zahlbar-pop-label { margin-top: 0; }
+.zahlbar-currency-input { width: 100%; }
 
 /* breakdown of a computed segment */
 /* the breakdown carries its own box, so hovering (inside the tooltip) and frozen (as a popover) look identical */
