@@ -1,5 +1,5 @@
 // Drives the harness page in headless Chromium with real mouse and key input over CDP.
-// usage: node harness/run.mjs [--only=edit,drag] [--shots] [--plan=note.md]   (--plan adds a screenshot of that note)   (CHROME=/path/to/chrome to override)
+// usage: node harness/run.mjs [--only=edit,drag] [--shots] [--docs] [--plan=note.md]   (--plan adds a screenshot of that note)   (CHROME=/path/to/chrome to override)
 import { spawn } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -15,7 +15,7 @@ const profile = mkdtempSync(path.join(tmpdir(), "zahlbar-chrome-"));
 const chrome = spawn(CHROME, ["--headless=new", "--disable-gpu", `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`,
   "--window-size=1300,820", "--no-first-run", "--allow-file-access-from-files", "about:blank"], { stdio: "ignore" });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const example = readFileSync(path.join(here, "..", "examples", "Plan 2027.md"), "utf8");
+const example = readFileSync(path.join(here, "..", "test", "fixtures", "Plan 2027.md"), "utf8");
 const PLAN = "Plan 2027.md";
 
 async function connect() {
@@ -454,6 +454,18 @@ if (args.shots) {
   await shot("dark-shortfall.png", 1300, 700);
   await boot();
   await shot("narrow.png", 600, 1100);
+  if (args.docs) {
+    const ex = readFileSync(path.join(here, "..", "examples", "Example plan.md"), "utf8");
+    mkdirSync(path.join(here, "..", "docs"), { recursive: true });
+    for (const theme of ["light", "dark"]) {
+      await boot({ [PLAN]: ex }, PLAN, theme);
+      await send("Emulation.setDeviceMetricsOverride", { width: 1200, height: 760, deviceScaleFactor: 2, mobile: false });
+      await sleep(300);
+      const r = await send("Page.captureScreenshot", { format: "png" });
+      writeFileSync(path.join(here, "..", "docs", `screenshot-${theme}.png`), Buffer.from(r.result.data, "base64"));
+    }
+    console.log("docs screenshots in docs/");
+  }
   if (args.plan) {
     await boot({ [PLAN]: readFileSync(args.plan, "utf8") });
     await shot("plan.png", 1300, 900);

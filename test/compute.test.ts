@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ordered, parse, totals } from "../src/core";
 
-const example = readFileSync(new URL("../examples/Plan 2027.md", import.meta.url), "utf8");
+const example = readFileSync(new URL("./fixtures/Plan 2027.md", import.meta.url), "utf8");
 
 describe("totals on the example plan", () => {
   const plan = parse(example);

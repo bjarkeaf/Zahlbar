@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { addEntry, moveEntry, parse, removeEntry, serializeEntry, setMeta, StaleError, updateEntry } from "../src/core";
 
-const example = readFileSync(new URL("../examples/Plan 2027.md", import.meta.url), "utf8");
+const example = readFileSync(new URL("./fixtures/Plan 2027.md", import.meta.url), "utf8");
 const ref = (text: string, name: string) => {
   const e = parse(text).entries.find((x) => x.name === name)!;
   return { line: e.line, raw: e.raw };
@@ -63,6 +63,18 @@ describe("parse", () => {
 
   it("is not flagged without the zahlbar key", () => {
     expect(parse("# Notes\n## Income\n- Salary: 1\n").flagged).toBe(false);
+  });
+});
+
+describe("the public example", () => {
+  it("parses without problems and round-trips", () => {
+    const text = readFileSync(new URL("../examples/Example plan.md", import.meta.url), "utf8");
+    const plan = parse(text);
+    expect(plan.flagged).toBe(true);
+    expect(plan.currency).toBe("EUR");
+    expect(plan.bad).toEqual([]);
+    expect(plan.entries.length).toBeGreaterThan(20);
+    for (const e of plan.entries) expect(serializeEntry(e)).toBe(e.raw);
   });
 });
 
