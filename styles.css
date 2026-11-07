@@ -100,7 +100,7 @@ body.zahlbar-grabbing, body.zahlbar-grabbing * { cursor: grabbing !important; us
 .zahlbar-crow-sw { display: block; background-color: var(--zahlbar-neutral); border-color: var(--zahlbar-neutral-b); }
 .zahlbar-crow-name { font-size: var(--font-ui-small); font-style: italic; padding-left: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .zahlbar-crow-amount { font-size: var(--font-ui-small); text-align: right; padding-right: 6px; }
-.zahlbar-crow-namecell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.zahlbar-crow-action { display: flex; align-items: center; min-height: 20px; }
 .zahlbar .zahlbar-sell { background: var(--background-primary); border: 1px solid var(--background-modifier-border); box-shadow: none; height: auto;
   padding: 0 7px; border-radius: 5px; font-size: 12px; line-height: 18px; color: var(--text-muted); display: none; flex: none; }
 .zahlbar-crow:hover .zahlbar-sell, .zahlbar-sell:focus-visible { display: inline-block; }
