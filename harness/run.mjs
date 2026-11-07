@@ -138,6 +138,8 @@ const scenarios = {
     expect((await ev(`document.querySelectorAll(".zahlbar-seg").length`)) > 8, "chart has segments");
     expect((await ev(`[...document.querySelectorAll(".zahlbar-chart text")].some(t => t.textContent === "Outgoings")`)), "Outgoings title");
     expect((await ev(`document.querySelector(".zahlbar-pick").textContent`)).startsWith("Plan 2027"), "plan title in header");
+    expect(await ev(`[...document.querySelectorAll(".zahlbar-chart text")].some(t => t.textContent === "64\u00a0500 DKK/mo")`), "currency on the income total");
+    expect((await ev(`document.querySelector(".zahlbar-metric span").textContent`)) === "cash left over DKK/mo", "currency on the metric");
   },
   async edit() {
     await boot();
@@ -227,7 +229,7 @@ const scenarios = {
     await hover(`.zahlbar-seg[data-kind="shares"]`);
     await sleep(80);
     const hovered = await rowsIn(".zahlbar-tooltip");
-    expect(JSON.stringify(hovered) === JSON.stringify(["+Stock vest10\u00a0000", "−Tax on vest4\u00a0000", "=Kept as shares6\u00a0000 /mo"]), `hover shows breakdown, got ${JSON.stringify(hovered)}`);
+    expect(JSON.stringify(hovered) === JSON.stringify(["+Stock vest10\u00a0000", "−Tax on vest4\u00a0000", "=Kept as shares6\u00a0000 DKK/mo"]), `hover shows breakdown, got ${JSON.stringify(hovered)}`);
     expect(await ev(`(() => { const id = __view.plan.entries.find((e) => e.name === "Stock vest").line; return document.querySelector('.zahlbar-seg[data-ids="' + id + '"]')?.classList.contains("is-hl"); })()`), "source lit up on hover");
     const box = (sel) => ev(`(() => { const b = document.querySelector("${sel}"); const r = b.getBoundingClientRect(); const rows = [...b.querySelectorAll(".zahlbar-bd-row")].map(x => Math.round(x.getBoundingClientRect().top - r.top)); return { x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height), rows }; })()`);
     const before = await box(".zahlbar-tooltip .zahlbar-breakdown");
@@ -264,7 +266,7 @@ const scenarios = {
     await hover(`.zahlbar-seg[data-kind="left"]`);
     await sleep(80);
     const cash = await rowsIn(".zahlbar-tooltip");
-    expect(cash.at(-1) === "=Cash left over3\u00a0050 /mo" && cash.length === 6, `cash breakdown, got ${JSON.stringify(cash)}`);
+    expect(cash.at(-1) === "=Cash left over3\u00a0050 DKK/mo" && cash.length === 6, `cash breakdown, got ${JSON.stringify(cash)}`);
   },
   async sell() {
     await boot();
@@ -301,7 +303,7 @@ const scenarios = {
     await hover(`.zahlbar-seg[data-kind="shares"]`);
     await sleep(80);
     const rows = await ev(`[...document.querySelectorAll(".zahlbar-tooltip .zahlbar-bd-row")].map(r => r.textContent)`);
-    expect(rows.includes("−Sell shares2\u00a0000") && rows.at(-1) === "=Kept as shares4\u00a0000 /mo", `kept shares reduced, got ${JSON.stringify(rows)}`);
+    expect(rows.includes("−Sell shares2\u00a0000") && rows.at(-1) === "=Kept as shares4\u00a0000 DKK/mo", `kept shares reduced, got ${JSON.stringify(rows)}`);
     await fill(`${row("Sell shares")} .zahlbar-amount`, "-9000");
     expect(await ev(`!!document.querySelector('.zahlbar-seg[data-kind="fromShares"]')`), "selling more than received draws on held shares");
   },

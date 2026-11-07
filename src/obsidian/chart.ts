@@ -26,6 +26,8 @@ export interface ChartInput {
   totals: Totals;
   view: View;
   sort: Sort;
+  /** from the note's frontmatter, shown with totals only */
+  currency: string | undefined;
   /** unique per view, so pattern ids don't clash between two open panes */
   uid: string;
   colorOf: ColorOf;
@@ -130,7 +132,7 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
     svg.append(s("line", { class: "zahlbar-ref", x1: axL, x2: pctX - 32, y1: y(T.income), y2: y(T.income) }));
   }
 
-  const per = view === "month" ? "/mo" : "/y";
+  const per = `${input.currency ?? ""}${view === "month" ? "/mo" : "/y"}`;
   const title = (x: number, name: string, sub: string) => {
     svg.append(s("text", { class: "zahlbar-bold zahlbar-title", x: x + bw / 2, y: bottom + 18, "text-anchor": "middle" }, name));
     svg.append(s("text", { class: "zahlbar-faint", x: x + bw / 2, y: bottom + 33, "text-anchor": "middle" }, sub));

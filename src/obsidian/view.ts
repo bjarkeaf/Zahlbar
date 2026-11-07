@@ -343,7 +343,7 @@ export class ZahlbarView extends ItemView implements ListHost {
 
   private breakdownEl(kind: Computed, interactive: boolean): { el: HTMLElement; ids: Set<string> } {
     const { title, total, lines } = this.breakdown(kind);
-    const per = this.view === "month" ? "/mo" : "/y";
+    const per = this.unit();
     const row = (sign: string, label: string, value: string, cls = "") =>
       h("div", { class: `zahlbar-bd-row ${cls}` }, h("span", { class: "zahlbar-bd-sign" }, sign), h("span", { class: "zahlbar-bd-label" }, label), h("span", { class: "zahlbar-bd-value" }, value));
     const el = h("div", { class: "zahlbar-breakdown" }, h("div", { class: "zahlbar-bd-title" }, title));
@@ -490,7 +490,7 @@ export class ZahlbarView extends ItemView implements ListHost {
   private drawChart(): void {
     if (!this.ui || !this.file || !this.plan.flagged) return;
     const box = this.ui.chartBox;
-    drawChart(this.ui.svg, { entries: this.plan.entries, totals: totals(this.plan.entries, this.view), view: this.view, sort: this.sort, uid: this.uid, colorOf: this.colorOf },
+    drawChart(this.ui.svg, { entries: this.plan.entries, totals: totals(this.plan.entries, this.view), view: this.view, sort: this.sort, uid: this.uid, colorOf: this.colorOf, currency: this.plan.currency },
       box.clientWidth, box.clientHeight);
     this.applyHover();
   }
@@ -501,10 +501,15 @@ export class ZahlbarView extends ItemView implements ListHost {
     const metric = (value: string, label: string, neg = false) =>
       h("div", { class: `zahlbar-metric${neg ? " is-neg" : ""}` }, h("b", {}, value), h("span", {}, label));
     this.ui.metrics.replaceChildren(
-      metric(formatRounded(t.cashLeft), `cash left over ${this.view === "month" ? "/mo" : "/y"}`, t.cashLeft < -0.5),
+      metric(formatRounded(t.cashLeft), `cash left over ${this.unit()}`, t.cashLeft < -0.5),
       metric(pct(t.taxRate), "tax rate"),
       metric(pct(t.savedRate), "saved, incl. shares & pension")
     );
+  }
+
+  /** "DKK/mo", or just "/mo" when the plan has no currency */
+  private unit(): string {
+    return `${this.plan.currency ?? ""}${this.view === "month" ? "/mo" : "/y"}`;
   }
 
   setHover(id: string | null): void {
