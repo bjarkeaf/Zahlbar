@@ -1,6 +1,6 @@
 import { ItemView, Menu, Notice, TFile } from "obsidian";
 import type { ViewStateResult, WorkspaceLeaf } from "obsidian";
-import type { Entry, EntryPatch, EntryRef, Plan, Scale, Section, Sort, View } from "../core";
+import type { Entry, EntryPatch, EntryRef, Freq, Plan, Scale, Section, Sort, View } from "../core";
 import {
   addEntry, formatAmount, formatRounded, freqLabel, moveEntry, parse, removeEntry, setMeta, shown, StaleError, totals, updateEntry
 } from "../core";
@@ -223,6 +223,11 @@ export class ZahlbarView extends ItemView implements ListHost {
       this.focusNext = { line: r.line, field: "name" };
       return r.text;
     });
+  }
+
+  addSale(form: "shares" | "pension", amount: number, freq: Freq | undefined): Promise<void> {
+    const name = form === "shares" ? "Sell shares" : "Pension payout";
+    return this.write((t) => addEntry(t, "saving", { name, amount: -amount, form, ...(freq ? { freq } : {}) }).text);
   }
 
   /** Reorders in memory while dragging, so the list and chart follow the pointer. */
@@ -587,7 +592,7 @@ export class ZahlbarView extends ItemView implements ListHost {
     const id = this.hoverId;
     const pinned = this.pinned;
     const pinnedRows = this.pinned;
-    this.ui.list.querySelectorAll<HTMLElement>(".zahlbar-row").forEach((r) =>
+    this.ui.list.querySelectorAll<HTMLElement>(".zahlbar-row, .zahlbar-crow").forEach((r) =>
       r.classList.toggle("is-hl", pinnedRows ? pinnedRows.has(r.dataset.id ?? "") : r.dataset.id === id));
     let any = false;
     this.ui.svg.querySelectorAll(".zahlbar-seg").forEach((g) => {

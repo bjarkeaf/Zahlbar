@@ -302,6 +302,24 @@ const scenarios = {
     await sleep(100);
     expect((await ev(`document.activeElement?.closest(".zahlbar-row")?.querySelector(".zahlbar-name")?.value`)) === first, `clicking a line opens ${first} for editing`);
   },
+  async received() {
+    await boot();
+    const crows = await ev(`[...document.querySelectorAll(".zahlbar-crow")].map(r => r.querySelector(".zahlbar-crow-name").textContent + " " + r.querySelector(".zahlbar-crow-amount").textContent)`);
+    expect(JSON.stringify(crows) === JSON.stringify(["Shares received 6\u00a0000", "Pension received 4\u00a0000"]), `received rows, got ${JSON.stringify(crows)}`);
+    const savingTotal = () => ev(`document.querySelectorAll(".zahlbar-sec")[2].querySelector(".zahlbar-sec-head span:last-child").textContent`);
+    expect((await savingTotal()) === "17\u00a0000 per month", `saving total counts what is received, got ${await savingTotal()}`);
+    await hover(".zahlbar-crow");
+    await click(".zahlbar-crow .zahlbar-sell");
+    await sleep(60);
+    expect(await ev(`document.activeElement?.classList.contains("zahlbar-currency-input")`), "sell field focused");
+    await type("6000 quarterly");
+    await key("Enter");
+    await sleep(150);
+    expect((await text()).includes("- Sell shares: -6 000 quarterly {shares}\n"), "sale line added");
+    expect((await savingTotal()) === "15\u00a0000 per month", `saving total after the sale, got ${await savingTotal()}`);
+    const bracket = await ev(`[...document.querySelectorAll(".zahlbar-chart text")].map(t => t.textContent).find(t => t.startsWith("15\u00a0000 · "))`);
+    expect(!!bracket, "list total matches the chart's Saving bracket");
+  },
   async sell() {
     await boot();
     await click(`.zahlbar-sec:nth-child(3) .zahlbar-add`);

@@ -1,7 +1,7 @@
 import type { Entry, EntryPatch, Form, Freq, Plan, Section, Sort, View } from "../core";
 import {
   formatAmount, formatRounded, freqLabel, MONTHLY, ordered, PALETTE, parseAmountInput, PRESETS, sameFreq,
-  SECTION_TITLES, SECTIONS, shown, UNITS, YEARLY
+  SECTION_TITLES, SECTIONS, shown, totals, UNITS, YEARLY
 } from "../core";
 import { entryId } from "./chart";
 import type { ColorOf } from "./colors";
@@ -25,6 +25,8 @@ export interface ListHost {
   update(e: Entry, patch: EntryPatch, focus?: Focus | null): Promise<void>;
   remove(e: Entry): Promise<void>;
   add(section: Section): Promise<void>;
+  /** adds a Saving line that takes `amount` out of shares or pension */
+  addSale(form: "shares" | "pension", amount: number, freq: Freq | undefined): Promise<void>;
   previewMove(e: Entry, to: number): void;
   commitMove(e: Entry, to: number): Promise<void>;
   openLine(line: number): void;
@@ -50,10 +52,17 @@ export function renderList(root: HTMLElement, host: ListHost): void {
 
   for (const sec of SECTIONS) {
     const list = ordered(plan.entries, sec, host.sort);
-    const total = list.filter((e) => !e.hidden).reduce((a, e) => a + shown(e, view), 0);
+    const t = totals(plan.entries, view);
+    // Saving also counts the shares and pension you receive, so the total matches the chart's Saving bracket
+    const received = sec === "saving" ? t.sharesReceived + t.pensionReceived : 0;
+    const total = list.filter((e) => !e.hidden).reduce((a, e) => a + shown(e, view), 0) + received;
     const box = h("div", { class: "zahlbar-sec" },
       h("div", { class: "zahlbar-sec-head" }, h("span", {}, SECTION_TITLES[sec]), h("span", {}, `${formatRounded(total)} ${view === "month" ? "per month" : "per year"}`)));
     for (const e of list) box.append(row(e, host));
+    if (sec === "saving") {
+      if (Math.abs(t.sharesReceived) > 0.5) box.append(receivedRow("shares", t.sharesReceived, host));
+      if (Math.abs(t.pensionReceived) > 0.5) box.append(receivedRow("pension", t.pensionReceived, host));
+    }
     const add = h("button", { class: "zahlbar-add" }, "+ Add");
     add.addEventListener("click", () => void host.add(sec));
     box.append(add);
@@ -145,6 +154,40 @@ function row(e: Entry, host: ListHost): HTMLElement {
   r.addEventListener("pointerenter", () => host.setHover(id));
   r.addEventListener("pointerleave", () => host.setHover(null));
   return r;
+}
+
+/** A computed row in Saving: shares or pension received from income. Not editable, but it can start a sale. */
+function receivedRow(form: "shares" | "pension", value: number, host: ListHost): HTMLElement {
+  const r = h("div", { class: "zahlbar-crow", "data-id": form, title: "Calculated from Income and Tax" });
+  const action = form === "shares" ? "sell…" : "take out…";
+  const btn = h("button", { class: "zahlbar-sell", "aria-label": form === "shares" ? "Sell some of these shares" : "Take out some pension" }, action);
+  btn.addEventListener("click", () => openSale(btn, form, host));
+  r.append(
+    h("span", { class: `zahlbar-sw zahlbar-crow-sw ${form === "shares" ? "is-lines" : "is-dots"}` }),
+    h("span", { class: "zahlbar-crow-name" }, form === "shares" ? "Shares received" : "Pension received"),
+    h("span", { class: "zahlbar-crow-amount" }, formatRounded(value)),
+    btn,
+    h("span", {})
+  );
+  r.addEventListener("pointerenter", () => host.setHover(form));
+  r.addEventListener("pointerleave", () => host.setHover(null));
+  return r;
+}
+
+/** Shortcut for selling: one field, an amount with an optional frequency, e.g. "15000 quarterly". */
+function openSale(anchor: HTMLElement, form: "shares" | "pension", host: ListHost): void {
+  const input = h("input", { class: "zahlbar-currency-input", placeholder: form === "shares" ? "e.g. 15000 quarterly" : "e.g. 2000 monthly", spellcheck: "false" });
+  const el = h("div", { class: "zahlbar-pop zahlbar-currency" }, h("div", { class: "zahlbar-pop-label" }, form === "shares" ? "Sell shares" : "Take out pension"), input);
+  input.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape") return closePopover();
+    if (ev.key !== "Enter") return;
+    const p = parseAmountInput(input.value);
+    if (!p || p.amount === 0) return input.classList.add("is-invalid");
+    closePopover();
+    void host.addSale(form, Math.abs(p.amount), p.freq);
+  });
+  mountPopover(el, anchor.getBoundingClientRect());
+  input.focus();
 }
 
 /** Enter commits and moves on, Esc reverts, leaving the field commits. */

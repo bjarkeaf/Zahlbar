@@ -18,6 +18,10 @@ export interface Totals {
   unspent: number;
   /** shares received, minus tax paid in shares, minus shares sold. Negative means selling shares you already hold. */
   keptShares: number;
+  /** shares from income, minus tax paid in shares. Before any sales. */
+  sharesReceived: number;
+  /** pension paid in for you, before any payouts */
+  pensionReceived: number;
   /** pension paid in for you, minus pension taken out */
   keptPension: number;
   taxRate: number;
@@ -53,6 +57,8 @@ export function totals(entries: Entry[], view: View): Totals {
     cashLeft: cashIn - cashOut,
     unspent: keptShares + keptPension,
     keptShares,
+    sharesReceived: sharesIn - paidInShares,
+    pensionReceived: pensionIn,
     keptPension,
     taxRate: rate(tax),
     savedRate: rate(income - tax - living)
