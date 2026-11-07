@@ -189,6 +189,15 @@ const scenarios = {
     await key("Escape");
     await sleep(50);
     expect(!(await ev(`!!document.querySelector(".earmark-pop")`)), "Escape closes popover");
+    await click(`${row("Stock purchase plan")} .earmark-sw`);
+    await sleep(350);
+    expect((await ev(`document.querySelector(".earmark-pop-label")?.textContent`)) === "Goes into", "saving asks where the money goes");
+    await click(`.earmark-pop-forms button:nth-child(2)`);
+    await sleep(200);
+    expect((await text()).includes("- Stock purchase plan: 5 000 {shares}\n"), "saving into shares written");
+    expect((await metric()) === "−950", "cash unchanged by saving into shares");
+    expect(await ev(`document.querySelector('${row("Stock purchase plan")} .earmark-sw').classList.contains("is-lines")`), "swatch shows lines");
+    await key("Escape");
     await click(`${row("Salary")} .earmark-sw`);
     await sleep(350);
     await click(`.earmark-pop .earmark-pop-item`);

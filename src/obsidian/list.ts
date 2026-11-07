@@ -302,9 +302,9 @@ function openPopover(anchor: HTMLElement, e: Entry, host: ListHost): void {
   if (!e.color) el.append(h("div", { class: "earmark-pop-note" }, "Automatic colour"));
 
   const forms: Array<[Form, string]> | null =
-    e.section === "income" ? [["cash", "Cash"], ["shares", "Shares"], ["pension", "Pension"]] : e.section === "tax" ? [["cash", "Cash"], ["shares", "Shares"]] : null;
+    e.section === "income" || e.section === "saving" ? [["cash", "Cash"], ["shares", "Shares"], ["pension", "Pension"]] : e.section === "tax" ? [["cash", "Cash"], ["shares", "Shares"]] : null;
   if (forms) {
-    el.append(h("div", { class: "earmark-pop-sep" }), h("div", { class: "earmark-pop-label" }, e.section === "income" ? "Received as" : "Paid with"));
+    el.append(h("div", { class: "earmark-pop-sep" }), h("div", { class: "earmark-pop-label" }, e.section === "income" ? "Received as" : e.section === "saving" ? "Goes into" : "Paid with"));
     const seg = h("div", { class: "earmark-segctl earmark-pop-forms" });
     for (const [f, label] of forms) {
       const b = h("button", { class: e.form === f ? "is-on" : "" }, label);
@@ -320,7 +320,9 @@ function openPopover(anchor: HTMLElement, e: Entry, host: ListHost): void {
       seg.append(b);
     }
     el.append(seg, h("div", { class: "earmark-pop-note" },
-      e.form === "cash" ? "Solid: spendable cash" : e.section === "tax" ? "Lines: paid by selling shares" : e.form === "pension" ? "Dots: pension, locked for decades" : "Lines: shares, sellable within months"));
+      e.section === "saving"
+        ? e.form === "cash" ? "Solid: stays as cash savings" : e.form === "pension" ? "Dots: pension, locked for decades. Paid from cash." : "Lines: shares, sellable within months. Paid from cash."
+        : e.form === "cash" ? "Solid: spendable cash" : e.section === "tax" ? "Lines: paid by selling shares" : e.form === "pension" ? "Dots: pension, locked for decades" : "Lines: shares, sellable within months"));
   }
 
   const hide = h("button", { class: "earmark-pop-item" }, h("span", {}, e.hidden ? "Show" : "Hide"), h("span", { class: "earmark-pop-hint" }, "double-click"));

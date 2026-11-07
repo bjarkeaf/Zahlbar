@@ -33,8 +33,9 @@ export function totals(entries: Entry[], view: View): Totals {
   const saving = sum((e) => e.section === "saving");
   const living = sum((e) => e.section === "living");
   const cashIn = sum((e) => e.section === "income" && e.form === "cash");
-  const cashOut = sum((e) => e.section !== "income" && e.form === "cash");
-  const paidInShares = sum((e) => e.section !== "income" && e.form !== "cash");
+  // only tax can be paid in shares (sell-to-cover). On saving, shares/pension says what the cash goes into, it's still cash out.
+  const paidInShares = sum((e) => e.section === "tax" && e.form !== "cash");
+  const cashOut = sum((e) => e.section !== "income") - paidInShares;
   const sharesIn = sum((e) => e.section === "income" && e.form === "shares");
   const pensionIn = sum((e) => e.section === "income" && e.form === "pension");
   const rate = (n: number) => (income > 0 ? n / income : 0);

@@ -9,7 +9,10 @@ export interface Freq {
   unit: Unit;
 }
 
-/** What the money is: spendable cash, or shares / pension that you can't spend. On a tax line, shares means sell-to-cover. */
+/**
+ * What kind of money it is. Income: received as cash, shares or pension. Tax: paid with cash, or shares (sell-to-cover).
+ * Saving: what the cash goes into. It is still paid in cash. Living is always cash.
+ */
 export type Form = "cash" | "shares" | "pension";
 
 export const PALETTE = ["beige", "cyan", "green", "lilac", "sand", "blue", "rose", "mint", "stone", "lavender"] as const;

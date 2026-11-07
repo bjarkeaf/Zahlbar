@@ -41,6 +41,15 @@ describe("totals on the example plan", () => {
   });
 });
 
+describe("saving into shares or pension", () => {
+  it("is still paid in cash, the attribute only says where the money goes", () => {
+    const plain = totals(parse(example).entries, "month");
+    const into = totals(parse(example.replace("- Stock purchase plan: 5 000", "- Stock purchase plan: 5 000 {shares}").replace("- Own pension: 2 000", "- Own pension: 2 000 {pension}")).entries, "month");
+    expect(into.cashLeft).toBeCloseTo(plain.cashLeft);
+    expect(into.keptShares).toBeCloseTo(plain.keptShares);
+  });
+});
+
 describe("ordered", () => {
   it("keeps file order, or sorts by yearly value", () => {
     const p = parse("## Living\n- Small: 100\n- Yearly: 10 000 yearly\n- Quarterly: 3 000 quarterly\n");
