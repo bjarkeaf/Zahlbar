@@ -1,8 +1,6 @@
 # Zahlbar
 
-Plan your money in a Markdown note and see it in Obsidian as two bars: what comes in, and where it goes.
-
-I made it for my own plan. Part of my pay arrives as shares and pension, some of the tax is paid by selling shares, and I wanted to see what is actually left in cash. If your income is only a salary, a spreadsheet may be enough.
+Simple financial planner that visualizes income and expenses as two bars. Obsidian plugin, so your plans are stored as Markdown files.
 
 The name is German for payable, and also reads as *Zahl* (number) plus bar.
 
