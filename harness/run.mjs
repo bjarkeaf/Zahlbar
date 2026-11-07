@@ -313,13 +313,23 @@ const scenarios = {
     await sleep(60);
     expect(await ev(`document.activeElement?.classList.contains("zahlbar-sale-amount")`), "amount field focused");
     await type("6000");
-    await ev(`(() => { const n = document.querySelector(".zahlbar-sale .zahlbar-freqn"); n.value = "3"; })()`);
+    await choose(".zahlbar-sale .zahlbar-sale-freq", "2");
     await key("Enter");
     await sleep(150);
     expect((await text()).includes("- Sell shares: -6 000 quarterly {shares}\n"), "sale line added");
     expect((await savingTotal()) === "15\u00a0000 per month", `saving total after the sale, got ${await savingTotal()}`);
     const bracket = await ev(`[...document.querySelectorAll(".zahlbar-chart text")].map(t => t.textContent).find(t => t.startsWith("15\u00a0000 · "))`);
     expect(!!bracket, "list total matches the chart's Saving bracket");
+    await hover(".zahlbar-crow:last-of-type");
+    await click(".zahlbar-crow:last-of-type .zahlbar-sell");
+    await sleep(60);
+    await type("1000");
+    await choose(".zahlbar-sale .zahlbar-sale-freq", "custom");
+    await sleep(30);
+    await ev(`(() => { document.querySelector(".zahlbar-sale .zahlbar-freqn").value = "2"; document.querySelector(".zahlbar-sale .zahlbar-frequ").value = "year"; })()`);
+    await key("Enter");
+    await sleep(150);
+    expect((await text()).includes("- Pension payout: -1 000 every 2 years {pension}\n"), "custom frequency in the sale shortcut");
   },
   async sell() {
     await boot();

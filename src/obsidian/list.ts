@@ -174,25 +174,40 @@ function receivedRow(form: "shares" | "pension", value: number, host: ListHost):
   return r;
 }
 
-/** Shortcut for selling: an amount, and how often as "every [N] [unit]", like the custom frequency editor. */
+/** Shortcut for selling: an amount, and how often with the same dropdown as the rows (presets, or custom…). */
 function openSale(anchor: HTMLElement, form: "shares" | "pension", host: ListHost): void {
   const amount = h("input", { class: "zahlbar-sale-amount", placeholder: "Amount", inputmode: "decimal", spellcheck: "false", "aria-label": "Amount" });
+  const select = h("select", { class: "zahlbar-sale-freq dropdown", "aria-label": "How often" });
+  PRESETS.forEach(([f, label], i) => select.append(h("option", { value: String(i), selected: sameFreq(f, MONTHLY) }, label)));
+  select.append(h("option", { value: "custom" }, "custom…"));
   const n = h("input", { class: "zahlbar-freqn", type: "number", min: 1, step: 1, value: 1, "aria-label": "Every how many" });
   const unit = h("select", { class: "zahlbar-frequ", "aria-label": "Unit" });
   for (const u of UNITS) unit.append(h("option", { value: u, selected: u === "month" }, `${u}s`));
+  const custom = h("div", { class: "zahlbar-custom zahlbar-sale-custom", hidden: true }, "every ", n, unit);
+  select.addEventListener("change", () => {
+    if (select.value !== "custom") return;
+    select.hidden = true;
+    custom.hidden = false;
+    n.focus();
+    n.select();
+  });
   const el = h("div", { class: "zahlbar-pop zahlbar-sale" },
-    h("div", { class: "zahlbar-pop-label" }, form === "shares" ? "Sell shares" : "Take out pension"),
-    amount, h("div", { class: "zahlbar-custom zahlbar-sale-freq" }, "every ", n, unit));
+    h("div", { class: "zahlbar-pop-label" }, form === "shares" ? "Sell shares" : "Take out pension"), amount, select, custom);
   el.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape") return closePopover();
     if (ev.key !== "Enter") return;
     ev.preventDefault();
     const a = parseAmountInput(amount.value);
-    const count = Math.round(Number(n.value));
     if (!a || a.amount === 0) return amount.classList.add("is-invalid");
-    if (!(count >= 1)) return n.classList.add("is-invalid");
+    let freq: Freq;
+    if (custom.hidden) freq = { ...(PRESETS[Number(select.value)]?.[0] ?? MONTHLY) };
+    else {
+      const count = Math.round(Number(n.value));
+      if (!(count >= 1)) return n.classList.add("is-invalid");
+      freq = { n: count, unit: unit.value as Freq["unit"] };
+    }
     closePopover();
-    void host.addSale(form, Math.abs(a.amount), { n: count, unit: unit.value as Freq["unit"] });
+    void host.addSale(form, Math.abs(a.amount), freq);
   });
   mountPopover(el, anchor.getBoundingClientRect());
   amount.focus();
