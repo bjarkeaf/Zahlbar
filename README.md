@@ -62,11 +62,11 @@ Run **Earmark: Open plan** or click the piggy bank in the ribbon.
 - Hover a row or a segment to see the two linked.
 - Thin segments merge into "N small items". Hover to see what's inside.
 - **Outgoings** stacks tax, saving and living, then any spare cash ("Left over", outlined).
-- Shares and pension you receive and keep count as saving. They're shown separately, because shares can be sold within months and pension is locked for decades:
-  - **Kept as shares** has lines, and is what's left after any tax paid by selling shares.
-  - **Kept as pension** is dotted.
+- Shares and pension you receive and keep count as saving. They're shown separately, since they usually become available on different timescales:
+  - **Kept as shares** has lines, after any tax paid by selling shares.
+  - **Kept as pension** has dots.
 - If cash runs short, a red "short" block sits on top of Income.
-- Click a computed segment (kept as shares, kept as pension, cash left over, shortfall) to see how it's calculated, line by line. The lines it comes from light up on the bars, and clicking a line jumps to it in the list.
+- Hover a computed segment (kept as shares, kept as pension, cash left over, shortfall) to see how it's calculated, and the lines it comes from light up. Click to keep the breakdown open, then click a line to edit it.
 
 **Toggles**
 - **Month | Year**: the month view averages anything that isn't monthly.

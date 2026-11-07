@@ -223,17 +223,25 @@ const scenarios = {
   },
   async breakdown() {
     await boot();
+    const rowsIn = (sel) => ev(`[...document.querySelectorAll("${sel} .earmark-bd-row")].map(r => r.textContent)`);
+    await hover(`.earmark-seg[data-kind="shares"]`);
+    await sleep(80);
+    const hovered = await rowsIn(".earmark-tooltip");
+    expect(JSON.stringify(hovered) === JSON.stringify(["+Stock vest10\u00a0000", "−Tax on vest4\u00a0000", "=Kept as shares6\u00a0000 /mo"]), `hover shows breakdown, got ${JSON.stringify(hovered)}`);
+    expect(await ev(`(() => { const id = __view.plan.entries.find((e) => e.name === "Stock vest").line; return document.querySelector('.earmark-seg[data-ids="' + id + '"]')?.classList.contains("is-hl"); })()`), "source lit up on hover");
     await click(`.earmark-seg[data-kind="shares"]`);
+    await sleep(80);
+    expect(await ev(`!!document.querySelector(".earmark-pop.earmark-breakdown")`), "click freezes it");
+    await mouse("mouseMoved", { x: 5, y: 400 }, { button: "none" });
+    await sleep(50);
+    expect(await ev(`!!document.querySelector(".earmark-pop.earmark-breakdown")`), "stays open when the pointer leaves");
+    await click(`.earmark-pop .earmark-bd-row.is-link`);
     await sleep(100);
-    const rows = await ev(`[...document.querySelectorAll(".earmark-breakdown .earmark-bd-row")].map(r => r.textContent)`);
-    expect(JSON.stringify(rows) === JSON.stringify(["+Stock vest10\u00a0000", "−Tax on vest4\u00a0000", "=Kept as shares6\u00a0000 /mo"]), `shares breakdown, got ${JSON.stringify(rows)}`);
-    await click(`.earmark-breakdown .earmark-bd-row.is-link`);
-    await sleep(100);
-    expect((await ev(`document.activeElement?.closest(".earmark-row")?.querySelector(".earmark-name")?.value`)) === "Stock vest", "line jumps to its row");
-    expect(!(await ev(`!!document.querySelector(".earmark-breakdown")`)), "breakdown closes");
-    await click(`.earmark-seg[data-kind="left"]`);
-    await sleep(100);
-    const cash = await ev(`[...document.querySelectorAll(".earmark-breakdown .earmark-bd-row")].map(r => r.textContent)`);
+    expect((await ev(`document.activeElement?.closest(".earmark-row")?.querySelector(".earmark-name")?.value`)) === "Stock vest", "source line opens its amount for editing");
+    expect(!(await ev(`!!document.querySelector(".earmark-pop")`)), "breakdown closes");
+    await hover(`.earmark-seg[data-kind="left"]`);
+    await sleep(80);
+    const cash = await rowsIn(".earmark-tooltip");
     expect(cash.at(-1) === "=Cash left over3\u00a0050 /mo" && cash.length === 6, `cash breakdown, got ${JSON.stringify(cash)}`);
   },
   async remove() {

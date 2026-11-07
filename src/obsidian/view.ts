@@ -26,6 +26,17 @@ export interface ViewHost {
 
 const ref = (e: Entry): EntryRef => ({ line: e.line, raw: e.raw });
 
+/** Segments Earmark computes rather than reads from a line. */
+type Computed = "shares" | "pension" | "left" | "short";
+const isComputed = (k: string | null | undefined): k is Computed => k === "shares" || k === "pension" || k === "left" || k === "short";
+interface BreakdownLine {
+  sign: "+" | "−";
+  label: string;
+  value: number;
+  e?: Entry;
+  group?: Entry[];
+}
+
 export class EarmarkView extends ItemView implements ListHost {
   file: TFile | null = null;
   plan: Plan = parse("");
@@ -35,6 +46,7 @@ export class EarmarkView extends ItemView implements ListHost {
   focusNext: Focus | null = null;
   /** segments to keep highlighted while a breakdown is open */
   private pinned: Set<string> | null = null;
+  private frozen = false;
   colorOf: ColorOf = colorMap([]);
 
   private lastWritten: string | null = null;
@@ -276,16 +288,16 @@ export class EarmarkView extends ItemView implements ListHost {
     );
     this.registerDomEvent(chartBox, "pointermove", (ev) => this.onChartHover(ev));
     this.registerDomEvent(chartBox, "pointerleave", () => {
+      if (this.frozen) return;
       tooltip.classList.remove("is-shown");
+      this.pinned = null;
       this.setHover(null);
+      this.applyHover();
     });
     this.registerDomEvent(chartBox, "click", (ev) => {
       const g = (ev.target as Element).closest(".earmark-seg");
       const kind = g?.getAttribute("data-kind");
-      if (kind === "shares" || kind === "pension" || kind === "left" || kind === "short") {
-        tooltip.classList.remove("is-shown");
-        return this.showBreakdown(kind, ev);
-      }
+      if (isComputed(kind)) return this.freezeBreakdown(kind);
       this.focusAmount(g?.getAttribute("data-ids")?.split(" ")[0]);
     });
   }
@@ -298,63 +310,57 @@ export class EarmarkView extends ItemView implements ListHost {
     input.select();
   }
 
-  /** Explains a computed segment: which lines feed into it, with + and −, and the total. */
-  private showBreakdown(kind: "shares" | "pension" | "left" | "short", ev: MouseEvent): void {
+  /** Which lines feed into a computed segment, with + and −, and its total. */
+  private breakdown(kind: Computed): { title: string; total: number; lines: BreakdownLine[] } {
     const t = totals(this.plan.entries, this.view);
     const visible = this.plan.entries.filter((e) => !e.hidden);
-    const per = this.view === "month" ? "/mo" : "/y";
-    interface Line { sign: "+" | "−"; label: string; value: number; e?: Entry; group?: Entry[] }
-    const plus = (e: Entry): Line => ({ sign: "+", label: e.name, value: shown(e, this.view), e });
-    const minus = (e: Entry): Line => ({ sign: "−", label: e.name, value: shown(e, this.view), e });
-    const sum = (es: Entry[]) => es.reduce((a, e) => a + shown(e, this.view), 0);
-    let title: string, about: string, total: number, lines: Line[];
-    if (kind === "shares") {
-      title = "Kept as shares";
-      about = "Shares you receive, minus tax paid by selling shares. Not cash, but sellable within months.";
-      lines = [...visible.filter((e) => e.section === "income" && e.form === "shares").map(plus),
-        ...visible.filter((e) => e.section === "tax" && e.form === "shares").map(minus)];
-      total = t.keptShares;
-    } else if (kind === "pension") {
-      title = "Kept as pension";
-      about = "Pension paid in for you. Locked until retirement. Pension you pay yourself is under Saving, since it comes out of your cash.";
-      lines = visible.filter((e) => e.section === "income" && e.form === "pension").map(plus);
-      total = t.keptPension;
-    } else {
-      title = kind === "left" ? "Cash left over" : "Cash shortfall";
-      about = kind === "left" ? "Cash income minus everything paid in cash." : "Cash income minus everything paid in cash. The gap has to come from savings or from selling shares.";
-      const group = (label: string, es: Entry[]): Line[] => (es.length ? [{ sign: "−", label, value: sum(es), group: es }] : []);
-      lines = [
-        ...visible.filter((e) => e.section === "income" && e.form === "cash").map(plus),
-        ...group("Tax paid in cash", visible.filter((e) => e.section === "tax" && e.form === "cash")),
-        ...group("Saving", visible.filter((e) => e.section === "saving")),
-        ...group("Living", visible.filter((e) => e.section === "living"))
-      ];
-      total = t.cashLeft;
-    }
+    const plus = (e: Entry): BreakdownLine => ({ sign: "+", label: e.name, value: shown(e, this.view), e });
+    const minus = (e: Entry): BreakdownLine => ({ sign: "−", label: e.name, value: shown(e, this.view), e });
+    const pick = (section: Section, form?: Entry["form"]) => visible.filter((e) => e.section === section && (!form || e.form === form));
+    if (kind === "shares") return { title: "Kept as shares", total: t.keptShares, lines: [...pick("income", "shares").map(plus), ...pick("tax", "shares").map(minus)] };
+    if (kind === "pension") return { title: "Kept as pension", total: t.keptPension, lines: pick("income", "pension").map(plus) };
+    const group = (label: string, es: Entry[]): BreakdownLine[] =>
+      es.length ? [{ sign: "−", label, value: es.reduce((a, e) => a + shown(e, this.view), 0), group: es }] : [];
+    return {
+      title: kind === "left" ? "Cash left over" : "Cash shortfall",
+      total: t.cashLeft,
+      lines: [...pick("income", "cash").map(plus), ...group("Tax paid in cash", pick("tax", "cash")), ...group("Saving", pick("saving")), ...group("Living", pick("living"))]
+    };
+  }
 
-    const rows = h("div", { class: "earmark-bd-rows" });
+  private breakdownEl(kind: Computed, interactive: boolean): { el: HTMLElement; ids: Set<string> } {
+    const { title, total, lines } = this.breakdown(kind);
+    const per = this.view === "month" ? "/mo" : "/y";
+    const row = (sign: string, label: string, value: string, cls = "") =>
+      h("div", { class: `earmark-bd-row ${cls}` }, h("span", { class: "earmark-bd-sign" }, sign), h("span", { class: "earmark-bd-label" }, label), h("span", { class: "earmark-bd-value" }, value));
+    const el = h("div", { class: "earmark-breakdown" }, h("div", { class: "earmark-bd-title" }, title));
     for (const l of lines) {
-      const row = h("div", { class: `earmark-bd-row${l.e ? " is-link" : ""}` },
-        h("span", { class: "earmark-bd-sign" }, l.sign), h("span", { class: "earmark-bd-label" }, l.label), h("span", { class: "earmark-bd-value" }, formatRounded(l.value)));
+      const r = row(l.sign, l.label, formatRounded(l.value), l.e && interactive ? "is-link" : "");
       const e = l.e;
-      if (e) {
-        row.setAttribute("title", "Show in the list");
-        row.addEventListener("click", () => {
+      if (e && interactive)
+        r.addEventListener("click", () => {
           closePopover();
           this.focusAmount(entryId(e));
         });
-      }
-      rows.append(row);
+      el.append(r);
     }
-    if (!lines.length) rows.append(h("div", { class: "earmark-bd-row" }, h("span", {}), h("span", { class: "earmark-bd-label" }, "Nothing feeds into this yet")));
-    rows.append(h("div", { class: `earmark-bd-row earmark-bd-total${total < -0.5 ? " is-neg" : ""}` },
-      h("span", { class: "earmark-bd-sign" }, "="), h("span", { class: "earmark-bd-label" }, title), h("span", { class: "earmark-bd-value" }, `${formatRounded(total)} ${per}`)));
-    const el = h("div", { class: "earmark-pop earmark-breakdown", role: "dialog", "aria-label": `${title} breakdown` },
-      h("div", { class: "earmark-bd-title" }, title), h("div", { class: "earmark-pop-note" }, about), rows);
-    // light up where the numbers come from while the breakdown is open
-    this.pinned = new Set([kind, ...lines.flatMap((l) => (l.e ? [l.e] : l.group ?? [])).map(entryId)]);
+    el.append(row("=", title, `${formatRounded(total)} ${per}`, `earmark-bd-total${total < -0.5 ? " is-neg" : ""}`));
+    return { el, ids: new Set([kind, ...lines.flatMap((l) => (l.e ? [l.e] : l.group ?? [])).map(entryId)]) };
+  }
+
+  /** Click on a computed segment: keep its breakdown open where the hover showed it, so a source line can be clicked. */
+  private freezeBreakdown(kind: Computed): void {
+    const { tooltip } = this.ui;
+    const at = tooltip.classList.contains("is-shown") ? tooltip.getBoundingClientRect() : null;
+    tooltip.classList.remove("is-shown");
+    const { el, ids } = this.breakdownEl(kind, true);
+    el.classList.add("earmark-pop");
+    this.frozen = true;
+    this.pinned = ids;
     this.applyHover();
-    mountPopover(el, { left: ev.clientX, top: ev.clientY, bottom: ev.clientY }, () => {
+    const r = at ?? this.ui.chartBox.getBoundingClientRect();
+    mountPopover(el, { left: r.left, top: r.top, bottom: r.top - 7 }, () => {
+      this.frozen = false;
       this.pinned = null;
       this.applyHover();
     });
@@ -509,28 +515,29 @@ export class EarmarkView extends ItemView implements ListHost {
   }
 
   private onChartHover(ev: PointerEvent): void {
+    if (this.frozen) return;
     const { tooltip, chartBox } = this.ui;
     const g = (ev.target as Element).closest(".earmark-seg");
     if (!g) {
       tooltip.classList.remove("is-shown");
+      this.pinned = null;
       this.setHover(null);
+      this.applyHover();
       return;
     }
     const ids = (g.getAttribute("data-ids") ?? "").split(" ");
     const kind = g.getAttribute("data-kind");
     this.setHover(ids[0] ?? null);
-    const t = totals(this.plan.entries, this.view);
-    const per = this.view === "month" ? "/mo" : "/y";
-    const line = (text: string, cls = "earmark-tt-sub") => h("div", { class: cls }, text);
     const parts: HTMLElement[] = [];
-    if (kind === "shares")
-      parts.push(line("Kept as shares", "earmark-tt-title"), line(`${formatRounded(t.keptShares)}: shares you receive, minus tax paid by selling shares`), line("Not cash, but sellable within months"));
-    else if (kind === "pension")
-      parts.push(line("Kept as pension", "earmark-tt-title"), line(`${formatRounded(t.keptPension)}: pension paid in for you`), line("Locked until retirement"));
-    else if (kind === "left") parts.push(line("Cash left over", "earmark-tt-title"), line(`cash in ${formatRounded(t.cashIn)} − cash out ${formatRounded(t.cashOut)}`));
-    else if (kind === "short")
-      parts.push(line(`Cash shortfall ${formatRounded(t.cashLeft)}`, "earmark-tt-title is-error"), line(`cash out ${formatRounded(t.cashOut)} is more than cash in ${formatRounded(t.cashIn)}`), line("has to come from savings"));
-    else {
+    if (isComputed(kind)) {
+      const b = this.breakdownEl(kind, false);
+      parts.push(b.el);
+      this.pinned = b.ids;
+    } else {
+      this.pinned = null;
+      const t = totals(this.plan.entries, this.view);
+      const per = this.view === "month" ? "/mo" : "/y";
+      const line = (text: string, cls = "earmark-tt-sub") => h("div", { class: cls }, text);
       const es = ids.map((id) => this.plan.entries.find((e) => entryId(e) === id)).filter((e): e is Entry => !!e);
       if (es.length > 1) {
         parts.push(line(`${es.length} small items`, "earmark-tt-title"));
@@ -538,13 +545,12 @@ export class EarmarkView extends ItemView implements ListHost {
       } else if (es[0]) {
         const e = es[0];
         const conv = freqLabel(e.freq) === (this.view === "month" ? "monthly" : "yearly") ? "" : ` · ≈ ${formatRounded(shown(e, this.view))} ${per}`;
-        parts.push(line(e.name, "earmark-tt-title"), line(`${formatAmount(e.amount, " ")} ${freqLabel(e.freq)}${conv}`));
         const share = t.income > 0 ? Math.round((shown(e, this.view) / t.income) * 100) : 0;
-        const form = e.form === "cash" ? "" : e.section === "income" ? ` · ${e.form}` : " · paid in shares";
-        parts.push(line(`${share}% of income${form}`));
+        const form = e.form === "cash" ? "" : e.section === "income" ? ` · ${e.form}` : e.section === "tax" ? " · paid in shares" : ` · into ${e.form}`;
+        parts.push(line(e.name, "earmark-tt-title"), line(`${formatAmount(e.amount, "\u00a0")} ${freqLabel(e.freq)}${conv}`), line(`${share}% of income${form}`));
       }
     }
-    if (kind === "shares" || kind === "pension" || kind === "left" || kind === "short") parts.push(line("Click for the breakdown", "earmark-tt-hint"));
+    this.applyHover();
     tooltip.replaceChildren(...parts);
     tooltip.classList.add("is-shown");
     const r = chartBox.parentElement!.getBoundingClientRect();

@@ -154,12 +154,13 @@ body.earmark-grabbing, body.earmark-grabbing * { cursor: grabbing !important; us
 .earmark-pop .earmark-pop-item:hover { background: var(--background-modifier-hover); }
 .earmark-pop-hint { font-size: 11px; color: var(--text-faint); }
 .earmark-undo { margin-left: 8px; }
-.earmark-tt-hint { color: var(--text-faint); font-size: 11px; margin-top: 2px; }
 
 /* breakdown of a computed segment */
-.earmark-pop.earmark-breakdown { width: 300px; }
+.earmark-breakdown { width: 260px; white-space: normal; }
+.earmark-tooltip:has(.earmark-breakdown) { padding: 8px; }
 .earmark-bd-title { font-weight: 600; font-size: 13px; }
-.earmark-bd-rows { margin-top: 8px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.earmark-breakdown .earmark-bd-title + .earmark-bd-row { margin-top: 6px; }
+.earmark-bd-row { font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .earmark-bd-row { display: grid; grid-template-columns: 14px 1fr auto; gap: 6px; padding: 2px 4px; border-radius: 4px; }
 .earmark-bd-row.is-link { cursor: pointer; }
 .earmark-bd-row.is-link:hover { background: var(--background-modifier-hover); }

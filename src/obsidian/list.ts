@@ -319,10 +319,7 @@ function openPopover(anchor: HTMLElement, e: Entry, host: ListHost): void {
       });
       seg.append(b);
     }
-    el.append(seg, h("div", { class: "earmark-pop-note" },
-      e.section === "saving"
-        ? e.form === "cash" ? "Solid: stays as cash savings" : e.form === "pension" ? "Dots: pension, locked for decades. Paid from cash." : "Lines: shares, sellable within months. Paid from cash."
-        : e.form === "cash" ? "Solid: spendable cash" : e.section === "tax" ? "Lines: paid by selling shares" : e.form === "pension" ? "Dots: pension, locked for decades" : "Lines: shares, sellable within months"));
+    el.append(seg);
   }
 
   const hide = h("button", { class: "earmark-pop-item" }, h("span", {}, e.hidden ? "Show" : "Hide"), h("span", { class: "earmark-pop-hint" }, "double-click"));
