@@ -47,10 +47,6 @@ currency: EUR
 
 Amounts are per occurrence and monthly unless you say otherwise. `{shares}` and `{pension}` mark money you can't spend, and on a tax line `{shares}` means it's paid by selling shares. A negative Saving line takes money out. Strike a line through to leave it out of the totals. [FORMAT.md](FORMAT.md) has the full syntax and how the totals are calculated.
 
-## What it doesn't do
-
-It's a plan, not a ledger. There are no transactions, no bank import and no network calls. Everything is an average per month or per year, with no timing within the year and no growth over time. One currency per plan.
-
 ## Development
 
 ```bash
