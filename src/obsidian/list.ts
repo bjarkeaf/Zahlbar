@@ -159,14 +159,14 @@ function row(e: Entry, host: ListHost): HTMLElement {
 /** A computed row in Saving: shares or pension received from income. Not editable, but it can start a sale. */
 function receivedRow(form: "shares" | "pension", value: number, host: ListHost): HTMLElement {
   const r = h("div", { class: "zahlbar-crow", "data-id": form, title: "Calculated from Income and Tax" });
-  const action = form === "shares" ? "sell…" : "take out…";
+  const action = form === "shares" ? "sell" : "take out";
   const btn = h("button", { class: "zahlbar-sell", "aria-label": form === "shares" ? "Sell some of these shares" : "Take out some pension" }, action);
   btn.addEventListener("click", () => openSale(btn, form, host));
   r.append(
     h("span", { class: `zahlbar-sw zahlbar-crow-sw ${form === "shares" ? "is-lines" : "is-dots"}` }),
-    h("span", { class: "zahlbar-crow-name" }, form === "shares" ? "Shares received" : "Pension received"),
+    h("span", { class: "zahlbar-crow-namecell" }, h("span", { class: "zahlbar-crow-name" }, form === "shares" ? "Shares received" : "Pension received"), btn),
     h("span", { class: "zahlbar-crow-amount" }, formatRounded(value)),
-    btn,
+    h("span", {}),
     h("span", {})
   );
   r.addEventListener("pointerenter", () => host.setHover(form));
