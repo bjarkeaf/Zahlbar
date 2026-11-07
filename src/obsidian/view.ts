@@ -450,7 +450,8 @@ export class EarmarkView extends ItemView implements ListHost {
     const per = this.view === "month" ? "/mo" : "/y";
     const line = (text: string, cls = "earmark-tt-sub") => h("div", { class: cls }, text);
     const parts: HTMLElement[] = [];
-    if (kind === "unspent") parts.push(line("Shares & pension, unspent", "earmark-tt-title"), line(`${formatRounded(t.unspent)}: non-cash income not used for tax`));
+    if (kind === "unspent")
+      parts.push(line("Kept as shares & pension", "earmark-tt-title"), line(`${formatRounded(t.unspent)}: shares and pension you receive and keep`), line("Saving that happens by itself, not spendable cash"));
     else if (kind === "left") parts.push(line("Cash left over", "earmark-tt-title"), line(`cash in ${formatRounded(t.cashIn)} − cash out ${formatRounded(t.cashOut)}`));
     else if (kind === "short")
       parts.push(line(`Cash shortfall ${formatRounded(t.cashLeft)}`, "earmark-tt-title is-error"), line(`cash out ${formatRounded(t.cashOut)} is more than cash in ${formatRounded(t.cashIn)}`), line("has to come from savings"));

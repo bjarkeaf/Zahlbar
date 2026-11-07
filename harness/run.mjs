@@ -1,5 +1,5 @@
 // Drives the harness page in headless Chromium with real mouse and key input over CDP.
-// usage: node harness/run.mjs [--only=edit,drag] [--shots]   (CHROME=/path/to/chrome to override)
+// usage: node harness/run.mjs [--only=edit,drag] [--shots] [--plan=note.md]   (--plan adds a screenshot of that note)   (CHROME=/path/to/chrome to override)
 import { spawn } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -351,6 +351,10 @@ if (args.shots) {
   await shot("dark-shortfall.png", 1300, 700);
   await boot();
   await shot("narrow.png", 600, 1100);
+  if (args.plan) {
+    await boot({ [PLAN]: readFileSync(args.plan, "utf8") });
+    await shot("plan.png", 1300, 900);
+  }
   console.log("screenshots in harness/dist/");
 }
 

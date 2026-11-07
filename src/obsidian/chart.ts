@@ -64,8 +64,14 @@ export function drawChart(svg: SVGSVGElement, input: ChartInput, W: number, Hbox
   const toSeg = (e: Entry): Seg => ({ kind: "entry", ids: [entryId(e)], v: shown(e, view), name: e.name, color: input.colorOf(e), hatch: e.form !== "cash", group: e.section });
 
   let s1 = ordered(visible, "income", input.sort).map(toSeg);
-  let s2 = (["tax", "saving", "living"] as const).flatMap((sec) => ordered(visible, sec, input.sort).map(toSeg));
-  if (T.unspent > 0.5) s2.push({ kind: "unspent", ids: ["unspent"], v: T.unspent, name: "Shares & pension", color: 0, hatch: true, group: "left" });
+  // shares and pension you keep are saving, so they sit at the top of the Saving group, not under "Left over"
+  const kept: Seg[] = T.unspent > 0.5 ? [{ kind: "unspent", ids: ["unspent"], v: T.unspent, name: "Kept as shares & pension", color: 0, hatch: true, group: "saving" }] : [];
+  let s2 = [
+    ...ordered(visible, "tax", input.sort).map(toSeg),
+    ...ordered(visible, "saving", input.sort).map(toSeg),
+    ...kept,
+    ...ordered(visible, "living", input.sort).map(toSeg)
+  ];
   if (T.cashLeft > 0.5) s2.push({ kind: "left", ids: ["left"], v: T.cashLeft, name: "Cash left over", color: 0, hatch: false, group: "left" });
   if (T.cashLeft < -0.5) s1.push({ kind: "short", ids: ["short"], v: -T.cashLeft, name: "Shortfall", color: 0, hatch: true, group: "short" });
   s1 = s1.filter((x) => x.v > 0);
