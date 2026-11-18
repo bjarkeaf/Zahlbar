@@ -40,6 +40,10 @@ const vault = {
 (window as any).__app = {
   vault,
   fileManager: {
+    async trashFile(f: TFile) {
+      files.delete(f.path);
+      emit("delete", f);
+    },
     async renameFile(f: TFile, path: string) {
       const old = f.path;
       files.set(path, files.get(old) ?? "");

@@ -464,6 +464,7 @@ export class ZahlbarView extends ItemView implements ListHost {
           await this.app.fileManager.renameFile(file, normalizePath(`${folder && folder !== "/" ? `${folder}/` : ""}${name}.md`));
         })
       ));
+      menu.addItem((i) => i.setTitle("Delete plan…").setIcon("trash-2").onClick(() => this.confirmDelete(file)));
     }
     if (this.file && this.plan.flagged) {
       const current = this.plan.currency;
@@ -474,6 +475,23 @@ export class ZahlbarView extends ItemView implements ListHost {
       menu.addItem((i) => i.setTitle("Open note").setIcon("file-text").onClick(() => void this.app.workspace.getLeaf("tab").openFile(file)));
     }
     menu.showAtMouseEvent(ev);
+  }
+
+  /** Asks first, then moves the note to the trash (Obsidian's or the system's, per the user's setting). */
+  private confirmDelete(file: TFile): void {
+    const del = h("button", { class: "mod-warning" }, "Move to trash");
+    const cancel = h("button", {}, "Cancel");
+    const el = h("div", { class: "zahlbar-pop zahlbar-name-pop" },
+      h("div", { class: "zahlbar-pop-label" }, `Delete ${file.basename}?`),
+      h("div", { class: "zahlbar-pop-note" }, "The note goes to the trash."),
+      h("div", { class: "zahlbar-confirm" }, cancel, del));
+    cancel.addEventListener("click", () => closePopover());
+    del.addEventListener("click", () => {
+      closePopover();
+      void this.app.fileManager.trashFile(file);
+    });
+    mountPopover(el, (this.ui?.pick ?? this.contentEl).getBoundingClientRect());
+    cancel.focus();
   }
 
   private newPlan(folder: string): void {
