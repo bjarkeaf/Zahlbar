@@ -464,6 +464,14 @@ export class ZahlbarView extends ItemView implements ListHost {
           await this.app.fileManager.renameFile(file, normalizePath(`${folder && folder !== "/" ? `${folder}/` : ""}${name}.md`));
         })
       ));
+      menu.addItem((i) => i.setTitle("Duplicate plan…").setIcon("copy").onClick(() => {
+        const folder = file.parent?.path ?? "";
+        this.askName("Duplicate plan", `${file.basename} copy`, folder, async (name) => {
+          const text = await this.app.vault.read(file);
+          const copy = await this.app.vault.create(normalizePath(`${folder && folder !== "/" ? `${folder}/` : ""}${name}.md`), text);
+          await this.openFile(copy);
+        }, true);
+      }));
       menu.addItem((i) => i.setTitle("Delete plan…").setIcon("trash-2").onClick(() => this.confirmDelete(file)));
     }
     if (this.file && this.plan.flagged) {
@@ -499,14 +507,15 @@ export class ZahlbarView extends ItemView implements ListHost {
   }
 
   /** A small name field under the plan name. Enter runs `done`, unless the name is empty, has a slash, or is taken. */
-  private askName(title: string, current: string, folder: string, done: (name: string) => Promise<void>): void {
+  private askName(title: string, current: string, folder: string, done: (name: string) => Promise<void>, suggestion = false): void {
     const input = h("input", { class: "zahlbar-currency-input", value: current, placeholder: "Plan name", spellcheck: "false", "aria-label": title });
     const el = h("div", { class: "zahlbar-pop zahlbar-currency zahlbar-name-pop" }, h("div", { class: "zahlbar-pop-label" }, title), input);
     input.addEventListener("keydown", (e) => {
       if (e.key === "Escape") return closePopover();
       if (e.key !== "Enter") return;
       const name = input.value.trim();
-      if (name === current) return closePopover();
+      // when renaming, keeping the same name is a no-op. A suggested name (Duplicate) is a real choice.
+      if (name === current && !suggestion) return closePopover();
       if (!name || /[\\/:]/.test(name) || this.host.planNameTaken(folder, name)) return input.classList.add("is-invalid");
       closePopover();
       void done(name);

@@ -476,14 +476,25 @@ const scenarios = {
     await sleep(200);
     expect(await ev(`__em.files.has("Year 2.md")`), "new plan created with its name");
     expect((await ev(`document.querySelector(".zahlbar-pick").textContent`)) === "Year 2▾", "and opened");
+    await ev(`__em.external("Year 2.md", __em.text("Year 2.md") + "## Living\\n- Rent: 900\\n")`);
+    await sleep(100);
+    await click(".zahlbar-pick");
+    await sleep(50);
+    await ev(`[...document.querySelectorAll(".menu-item")].find(i => i.textContent === "Duplicate plan…").click()`);
+    await sleep(50);
+    expect((await ev(`document.activeElement?.value`)) === "Year 2 copy", "suggests a name for the copy");
+    await key("Enter");
+    await sleep(200);
+    expect((await ev(`__em.text("Year 2 copy.md")`)) === (await ev(`__em.text("Year 2.md")`)), "copy has the same content");
+    expect((await ev(`document.querySelector(".zahlbar-pick").textContent`)) === "Year 2 copy▾", "and the copy is opened");
     await click(".zahlbar-pick");
     await sleep(50);
     await ev(`[...document.querySelectorAll(".menu-item")].find(i => i.textContent === "Delete plan…").click()`);
     await sleep(50);
-    expect(await ev(`__em.files.has("Year 2.md")`), "nothing deleted before confirming");
+    expect(await ev(`__em.files.has("Year 2 copy.md")`), "nothing deleted before confirming");
     await click(".zahlbar-confirm .mod-warning");
     await sleep(150);
-    expect(!(await ev(`__em.files.has("Year 2.md")`)), "deleted after confirming");
+    expect(!(await ev(`__em.files.has("Year 2 copy.md")`)) && (await ev(`__em.files.has("Year 2.md")`)), "deleted after confirming, original kept");
     expect(await ev(`document.querySelector(".zahlbar-empty").textContent.includes("No plan open")`), "pane shows the empty state");
   },
   async external() {
