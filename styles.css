@@ -172,6 +172,8 @@ body.zahlbar-grabbing, body.zahlbar-grabbing * { cursor: grabbing !important; us
 .zahlbar-pop-hint { font-size: 11px; color: var(--text-faint); }
 .zahlbar-undo { margin-left: 8px; }
 .zahlbar-pop.zahlbar-currency { width: 160px; }
+.zahlbar-pop.zahlbar-name-pop { width: 240px; }
+.zahlbar-name-pop .is-invalid { border-color: var(--text-error); }
 .zahlbar-currency .zahlbar-pop-label { margin-top: 0; }
 .zahlbar-currency-input { width: 100%; }
 .zahlbar-pop.zahlbar-sale { width: 200px; }

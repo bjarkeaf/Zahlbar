@@ -450,6 +450,33 @@ const scenarios = {
     expect((await text()).includes("currency: EUR\n"), "currency saved in frontmatter");
     expect((await ev(`document.querySelector('.zahlbar-head .zahlbar-segctl:last-of-type button[data-v="amount"]').textContent`)) === "EUR", "toggle shows the new currency");
   },
+  async naming() {
+    await boot();
+    await click(".zahlbar-pick");
+    await sleep(50);
+    await ev(`[...document.querySelectorAll(".menu-item")].find(i => i.textContent === "Rename plan…").click()`);
+    await sleep(50);
+    await ev(`document.activeElement.select()`);
+    await type("Year 1");
+    await key("Enter");
+    await sleep(200);
+    expect(await ev(`__em.files.has("Year 1.md") && !__em.files.has("Plan 2027.md")`), "file renamed");
+    expect((await ev(`document.querySelector(".zahlbar-pick").textContent`)) === "Year 1▾", `header follows the new name, got ${await ev(`document.querySelector(".zahlbar-pick").textContent`)}`);
+    await click(".zahlbar-pick");
+    await sleep(50);
+    await ev(`[...document.querySelectorAll(".menu-item")].find(i => i.textContent === "New plan…").click()`);
+    await sleep(50);
+    await type("Year 1");
+    await key("Enter");
+    await sleep(50);
+    expect(await ev(`document.activeElement?.classList.contains("is-invalid")`), "a taken name is refused");
+    await ev(`document.activeElement.select()`);
+    await type("Year 2");
+    await key("Enter");
+    await sleep(200);
+    expect(await ev(`__em.files.has("Year 2.md")`), "new plan created with its name");
+    expect((await ev(`document.querySelector(".zahlbar-pick").textContent`)) === "Year 2▾", "and opened");
+  },
   async external() {
     await boot();
     await ev(`__em.external(${JSON.stringify(PLAN)}, __em.text(${JSON.stringify(PLAN)}).replace("- Rent: 9 500", "- Rent: 7 000"))`);

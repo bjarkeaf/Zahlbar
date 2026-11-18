@@ -1,4 +1,4 @@
-import { ItemView, Menu, Notice, TFile } from "obsidian";
+import { ItemView, Menu, normalizePath, Notice, TFile } from "obsidian";
 import type { ViewStateResult, WorkspaceLeaf } from "obsidian";
 import type { Entry, EntryPatch, EntryRef, Freq, Plan, Scale, Section, Sort, View } from "../core";
 import {
@@ -17,7 +17,9 @@ export const ICON = "piggy-bank";
 /** What the view needs from the plugin. */
 export interface ViewHost {
   planFiles(): TFile[];
-  createPlan(folder: string): Promise<TFile>;
+  /** creates a plan note named `name` (or "Plan", "Plan 2"... when left out) */
+  createPlan(folder: string, name?: string): Promise<TFile>;
+  planNameTaken(folder: string, name: string): boolean;
   rememberFile(path: string): void;
   /** list width in px chosen with the divider, shared by all panes */
   listWidth: number | undefined;
@@ -108,10 +110,11 @@ export class ZahlbarView extends ItemView implements ListHost {
     this.registerEvent(this.app.vault.on("modify", (f) => void this.onModify(f.path)));
     this.registerEvent(
       this.app.vault.on("rename", (f, old) => {
-        if (this.file && old === this.file.path && f instanceof TFile) {
+        if (this.file && f instanceof TFile && (f === this.file || old === this.file.path)) {
           this.file = f;
           this.host.rememberFile(f.path);
           this.render();
+          (this.leaf as unknown as { updateHeader?: () => void }).updateHeader?.();
         }
       })
     );
@@ -451,11 +454,17 @@ export class ZahlbarView extends ItemView implements ListHost {
       menu.addItem((i) => i.setTitle(f.basename).setChecked(f.path === this.file?.path).onClick(() => void this.openFile(f)));
     menu.addSeparator();
     menu.addItem((i) =>
-      i.setTitle("New plan").setIcon("plus").onClick(async () => {
-        const f = await this.host.createPlan(this.file?.parent?.path ?? "");
-        await this.openFile(f);
-      })
+      i.setTitle("New plan…").setIcon("plus").onClick(() => this.newPlan(this.file?.parent?.path ?? ""))
     );
+    if (this.file) {
+      const file = this.file;
+      menu.addItem((i) => i.setTitle("Rename plan…").setIcon("pencil").onClick(() =>
+        this.askName("Rename plan", file.basename, file.parent?.path ?? "", async (name) => {
+          const folder = file.parent?.path ?? "";
+          await this.app.fileManager.renameFile(file, normalizePath(`${folder && folder !== "/" ? `${folder}/` : ""}${name}.md`));
+        })
+      ));
+    }
     if (this.file && this.plan.flagged) {
       const current = this.plan.currency;
       menu.addItem((i) => i.setTitle(current ? `Currency: ${current}` : "Set currency").setIcon("coins").onClick(() => this.editCurrency()));
@@ -465,6 +474,30 @@ export class ZahlbarView extends ItemView implements ListHost {
       menu.addItem((i) => i.setTitle("Open note").setIcon("file-text").onClick(() => void this.app.workspace.getLeaf("tab").openFile(file)));
     }
     menu.showAtMouseEvent(ev);
+  }
+
+  private newPlan(folder: string): void {
+    this.askName("New plan", "", folder, async (name) => this.openFile(await this.host.createPlan(folder, name)));
+  }
+
+  /** A small name field under the plan name. Enter runs `done`, unless the name is empty, has a slash, or is taken. */
+  private askName(title: string, current: string, folder: string, done: (name: string) => Promise<void>): void {
+    const input = h("input", { class: "zahlbar-currency-input", value: current, placeholder: "Plan name", spellcheck: "false", "aria-label": title });
+    const el = h("div", { class: "zahlbar-pop zahlbar-currency zahlbar-name-pop" }, h("div", { class: "zahlbar-pop-label" }, title), input);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") return closePopover();
+      if (e.key !== "Enter") return;
+      const name = input.value.trim();
+      if (name === current) return closePopover();
+      if (!name || /[\\/:]/.test(name) || this.host.planNameTaken(folder, name)) return input.classList.add("is-invalid");
+      closePopover();
+      void done(name);
+    });
+    input.addEventListener("input", () => input.classList.remove("is-invalid"));
+    const anchor = (this.ui?.pick ?? this.contentEl).getBoundingClientRect();
+    mountPopover(el, anchor);
+    input.focus();
+    input.select();
   }
 
   /** A small field by the scale toggle. Enter saves the currency to the note's frontmatter, empty removes it. */
@@ -532,7 +565,7 @@ export class ZahlbarView extends ItemView implements ListHost {
       return;
     }
     const create = h("button", { class: "mod-cta" }, "New plan");
-    create.addEventListener("click", async () => this.openFile(await this.host.createPlan("")));
+    create.addEventListener("click", () => this.newPlan(""));
     empty.append(h("p", {}, "No plan open."), create);
     for (const f of this.host.planFiles()) {
       const b = h("button", {}, `Open ${f.basename}`);

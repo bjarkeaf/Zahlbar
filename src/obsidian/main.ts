@@ -17,6 +17,7 @@ export default class ZahlbarPlugin extends Plugin implements ViewHost {
     this.addRibbonIcon(ICON, "Open Zahlbar", () => void this.open());
     this.addCommand({ id: "open", name: "Open plan", callback: () => void this.open() });
     this.addCommand({ id: "new-plan", name: "New plan", callback: async () => this.openFile(await this.createPlan("")) });
+    // (the pane's own New plan… asks for a name first)
     this.registerEvent(
       this.app.workspace.on("file-menu", (menu, file) => {
         if (file instanceof TFile && this.isPlan(file))
@@ -74,10 +75,15 @@ export default class ZahlbarPlugin extends Plugin implements ViewHost {
     await ws.revealLeaf(leaf);
   }
 
-  async createPlan(folder: string): Promise<TFile> {
+  planNameTaken(folder: string, name: string): boolean {
     const base = folder && folder !== "/" ? `${folder}/` : "";
-    let name = "Plan";
-    for (let i = 2; this.app.vault.getAbstractFileByPath(normalizePath(`${base}${name}.md`)); i++) name = `Plan ${i}`;
-    return this.app.vault.create(normalizePath(`${base}${name}.md`), newPlanText(name));
+    return !!this.app.vault.getAbstractFileByPath(normalizePath(`${base}${name}.md`));
+  }
+
+  async createPlan(folder: string, name?: string): Promise<TFile> {
+    const base = folder && folder !== "/" ? `${folder}/` : "";
+    let title = name ?? "Plan";
+    if (!name) for (let i = 2; this.app.vault.getAbstractFileByPath(normalizePath(`${base}${title}.md`)); i++) title = `Plan ${i}`;
+    return this.app.vault.create(normalizePath(`${base}${title}.md`), newPlanText(title));
   }
 }

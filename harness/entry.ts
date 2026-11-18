@@ -39,6 +39,17 @@ const vault = {
 
 (window as any).__app = {
   vault,
+  fileManager: {
+    async renameFile(f: TFile, path: string) {
+      const old = f.path;
+      files.set(path, files.get(old) ?? "");
+      files.delete(old);
+      fileObjs.delete(old);
+      f.path = path;
+      fileObjs.set(path, f);
+      emit("rename", f, old);
+    }
+  },
   metadataCache: { getFileCache: (f: TFile) => ({ frontmatter: parse(files.get(f.path) ?? "").flagged ? { zahlbar: 1 } : undefined }) },
   workspace: { getLeaf: () => ({ openFile: async (f: TFile, o?: { eState?: { line?: number } }) => opened.push({ path: f.path, ...(o?.eState?.line !== undefined ? { line: o.eState.line } : {}) }) }) }
 };
@@ -57,7 +68,8 @@ const vault = {
     const { ZahlbarView } = await import("../src/obsidian/view");
     const host = {
       planFiles: () => [...files.keys()].filter((p) => parse(files.get(p)!).flagged).map(fileFor),
-      createPlan: async () => vault.create("Plan.md", "---\nzahlbar: 1\n---\n# Plan\n"),
+      createPlan: async (_folder: string, name = "Plan") => vault.create(`${name}.md`, `---\nzahlbar: 1\n---\n# ${name}\n`),
+      planNameTaken: (_folder: string, name: string) => files.has(`${name}.md`),
       rememberFile: () => {},
       listWidth: undefined as number | undefined,
       saveListWidth(px: number | undefined) {
